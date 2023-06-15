@@ -1,4 +1,4 @@
-import { useFetcher } from '@remix-run/react';
+import { Link, useFetcher } from '@remix-run/react';
 import { Input } from '~/components/ui/Input';
 import {
     Select,
@@ -7,7 +7,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '~/components/ui/Select';
-import { Button } from '~/components/ui/Button';
+import { Button, buttonVariants } from '~/components/ui/Button';
 import type { AddUserActionData } from '~/routes/_app.users.add';
 
 export const AddUserForm = ({ action, className }: { action?: string; className?: string }) => {
@@ -34,6 +34,9 @@ export const AddUserForm = ({ action, className }: { action?: string; className?
                 </Select>
             </div>
             <div className={'flex gap-3 justify-end mt-5'}>
+                <Link className={buttonVariants({ variant: 'outline' })} to={'/users'}>
+                    Abbruch
+                </Link>
                 <Button variant={'brand'}>Hinzufügen</Button>
             </div>
         </fetcher.Form>

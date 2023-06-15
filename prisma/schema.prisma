@@ -46,6 +46,12 @@ model StudentData {
   trainingPhase TrainingPhase
 }
 
+model InstructorData {
+  userId              String @id
+  user                User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyDrivingMinutes Float  @default(415)
+}
+
 enum TrainingPhase {
   DEFAULT
   EXTENSIVE
