@@ -1,19 +1,40 @@
 import type { DataFunctionArgs, LinksFunction } from '@remix-run/node';
-import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
+import { json } from '@remix-run/node';
+import {
+    Links,
+    LiveReload,
+    Meta,
+    Outlet,
+    Scripts,
+    ScrollRestoration,
+    useLoaderData,
+} from '@remix-run/react';
 
 import stylesheet from '~/tailwind.css';
-import { AppLayout } from '~/components/features/AppLayout';
 import { getUser } from '~/utils/user/user.server';
-import { json } from '@remix-run/node';
+import { getToastMessage } from '~/utils/flash/toast.server';
+import { Toaster } from '~/components/ui/Toaster';
+import { useEffect } from 'react';
+import { useToast } from '~/components/ui/use-toast';
 
 export const links: LinksFunction = () => [{ rel: 'stylesheet', href: stylesheet }];
 
 export const loader = async ({ request }: DataFunctionArgs) => {
     const user = await getUser(request);
-    return json({ user });
+    const { header, toastMessage } = await getToastMessage(request);
+    return json({ user, toastMessage }, { headers: { 'Set-Cookie': header } });
 };
 
 export default function App() {
+    const { toastMessage } = useLoaderData<typeof loader>();
+    const { toast } = useToast();
+
+    useEffect(() => {
+        if (toastMessage) {
+            toast(toastMessage);
+        }
+    }, [toastMessage]);
+
     return (
         <html lang='en'>
             <head>
@@ -23,6 +44,7 @@ export default function App() {
                 <Links />
             </head>
             <body>
+                <Toaster />
                 <Outlet />
                 <ScrollRestoration />
                 <Scripts />

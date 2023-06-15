@@ -15,3 +15,7 @@ export function useOptionalUser(): User | undefined {
     const data = useMatchesData('root');
     return data?.user as User | undefined;
 }
+
+export function getFullName(user: User) {
+    return `${user.firstName} ${user.lastName}`;
+}

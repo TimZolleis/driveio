@@ -1,19 +1,18 @@
 import { DataFunctionArgs, json, redirect } from '@remix-run/node';
 import { zfd } from 'zod-form-data';
 import { ZodError } from 'zod';
-import { requireManagementPermissions, requireUser } from '~/utils/user/user.server';
+import { requireManagementPermissions } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
 import { Prisma } from '.prisma/client';
 import { errors } from '~/messages/errors';
-import { Modal } from '~/components/ui/Modal';
-import { Card, CardDescription, CardTitle } from '~/components/ui/Card';
-import { AddUserForm } from '~/components/features/user/AddUserForm';
 import { useNavigate } from 'react-router';
 import { requireParameter } from '~/utils/general-utils';
 import { useActionData, useLoaderData } from '@remix-run/react';
 import { UserForm } from '~/components/features/user/UserForm';
 import { requireResult } from '~/utils/db/require-result.server';
-import { err } from '@remix-run/dev/dist/result';
+import { toastMessage } from '~/utils/flash/toast.server';
+import { differentiateCatchVersusErrorBoundaries } from '@remix-run/server-runtime/dist/server';
+import { Separator } from '~/components/ui/Seperator';
 
 const editUserFormSchema = zfd.formData({
     firstName: zfd.text(),
@@ -46,7 +45,14 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
                 ...data,
             },
         });
-        return redirect('/users');
+        return redirect('/users', {
+            headers: {
+                'Set-Cookie': await toastMessage(request, {
+                    title: 'Daten gespeichert',
+                    description: 'Benutzerdaten erfolgreich gespeichert',
+                }),
+            },
+        });
     } catch (error) {
         if (error instanceof ZodError) {
             return json({ formValidationErrors: error.formErrors.fieldErrors });
@@ -71,15 +77,18 @@ const AddUserPage = () => {
     const onClose = () => {
         navigate('/users');
     };
+
     return (
-        <Modal open={true} onClose={onClose}>
-            <Card className={'border-none shadow-none p-0'}>
-                <div className={'grid gap-2'}>
-                    <CardTitle>Benutzer bearbeiten</CardTitle>
-                </div>
-                <UserForm errors={data?.formValidationErrors} user={user} />
-            </Card>
-        </Modal>
+        <div className={'w-full'}>
+            <div>
+                <h3 className='text-lg font-medium'>Generell</h3>
+                <p className='text-sm text-muted-foreground'>
+                    Hier können generelle Details eines Benutzers bearbeitet werden
+                </p>
+            </div>
+            <Separator className={'my-6'} />
+            <UserForm errors={data?.formValidationErrors} user={user} />
+        </div>
     );
 };
 

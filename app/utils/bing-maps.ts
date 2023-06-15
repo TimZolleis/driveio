@@ -2,6 +2,7 @@ import axios from 'axios';
 import { env } from '~/utils/env/env';
 import type { BingMapsResponse } from '~/types/bing-maps-response';
 import type { BingMapsLocation } from '~/types/bing-maps-location';
+import { a } from 'vite-node/types-63205a44';
 
 const baseURL = 'https://dev.virtualearth.net/REST/v1';
 
@@ -23,4 +24,8 @@ export async function getLocationByName(
             maxResults: 20,
         },
     });
+}
+
+export async function getAddressByCoordinates(lat: number | null, lng: number | null) {
+    return getBingMapsClient().get<BingMapsResponse<BingMapsLocation>>(`/locations/${lat},${lng}`);
 }

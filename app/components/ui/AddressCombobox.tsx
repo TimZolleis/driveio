@@ -12,13 +12,17 @@ import type { BingMapsLocation } from '~/types/bing-maps-location';
 export const AddressCombobox = ({
     results,
     onInput,
+    defaultLocation,
 }: {
     results: BingMapsLocation[];
     onInput: (event: string) => void;
+    defaultLocation?: BingMapsLocation;
 }) => {
-    const [searchValue, setSearchValue] = useState('');
+    const [searchValue, setSearchValue] = useState(defaultLocation?.address.formattedAddress || '');
     const [showResults, setShowResults] = useState(false);
-    const [pickupLocation, setPickupLocation] = useState<BingMapsLocation | undefined>(undefined);
+    const [pickupLocation, setPickupLocation] = useState<BingMapsLocation | undefined>(
+        defaultLocation
+    );
 
     return (
         <div>
@@ -63,8 +67,8 @@ export const AddressCombobox = ({
                     </div>
                 )}
             </Command>
-            <input type='hidden' name={'addressLat'} value={pickupLocation?.point.coordinates[0]} />
-            <input type='hidden' name={'addressLng'} value={pickupLocation?.point.coordinates[1]} />
+            <input type='hidden' name={'pickupLat'} value={pickupLocation?.point.coordinates[0]} />
+            <input type='hidden' name={'pickupLng'} value={pickupLocation?.point.coordinates[1]} />
         </div>
     );
 };

@@ -6,6 +6,7 @@ import { requireManagementPermissions } from '~/utils/user/user.server';
 import { useLoaderData } from '@remix-run/react';
 import { AlertDialog } from '~/components/ui/AlertDialog';
 import { CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
+import { getFullName } from '~/utils/hooks/user';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const managementUser = await requireManagementPermissions(request);
@@ -32,10 +33,8 @@ const DeleteUserPage = () => {
             <CardHeader>
                 <CardTitle>Benutzer löschen</CardTitle>
                 <CardDescription>
-                    Soll{' '}
-                    <span className={'font-medium'}>
-                        {user.firstName} {user.lastName}
-                    </span>{' '}
+                    Soll
+                    <span className={'font-medium'}>{getFullName(user)}</span>
                     wirklich gelöscht werden? Diese Aktion kann nicht rückgängig gemacht werden.
                 </CardDescription>
             </CardHeader>

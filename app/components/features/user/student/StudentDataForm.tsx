@@ -1,5 +1,5 @@
 import type { StudentData, User } from '.prisma/client';
-import { Form, useFetcher } from '@remix-run/react';
+import { Form, Link, useFetcher } from '@remix-run/react';
 import { DatePicker } from '~/components/ui/DatePicker';
 import { Label } from '~/components/ui/Label';
 import {
@@ -11,10 +11,12 @@ import {
 } from '~/components/ui/Select';
 import { trainingClasses, trainingPhases } from '~/config/trainingClasses';
 import { Input } from '~/components/ui/Input';
-import { Button } from '~/components/ui/Button';
+import { Button, buttonVariants } from '~/components/ui/Button';
 import type { LocationApiRoute } from '~/routes/api.location';
 import { AddressCombobox } from '~/components/ui/AddressCombobox';
 import { Separator } from '~/components/ui/Seperator';
+import type { BingMapsLocation } from '~/types/bing-maps-location';
+import { cn } from '~/utils/css';
 
 interface StudentDataFormProps {
     studentData?: StudentData;
@@ -22,9 +24,15 @@ interface StudentDataFormProps {
     errors?: {
         [key: string]: string[];
     };
+    currentAddress?: BingMapsLocation | undefined;
 }
 
-export const StudentDataForm = ({ studentData, errors, instructors }: StudentDataFormProps) => {
+export const StudentDataForm = ({
+    studentData,
+    errors,
+    instructors,
+    currentAddress,
+}: StudentDataFormProps) => {
     const fetcher = useFetcher<LocationApiRoute>();
     return (
         <Form method={'post'}>
@@ -124,6 +132,7 @@ export const StudentDataForm = ({ studentData, errors, instructors }: StudentDat
                 <div className={'grid gap-2 w-full'}>
                     <Label>Abholort</Label>
                     <AddressCombobox
+                        defaultLocation={currentAddress}
                         results={fetcher.data?.results || []}
                         onInput={(query) => fetcher.load(`/api/location?query=${query}`)}
                     />
@@ -133,7 +142,15 @@ export const StudentDataForm = ({ studentData, errors, instructors }: StudentDat
                     <Input name={'waitingTime'} defaultValue={studentData?.waitingTime || '30'} />
                 </div>
             </div>
-            <div className={'flex mt-5 justify-end'}>
+            <div className={'flex mt-5 justify-end gap-3'}>
+                <Link
+                    to={`/users/${studentData?.userId}/end-training`}
+                    className={cn(
+                        buttonVariants(),
+                        'bg-amber-500/30 text-amber-800 hover:bg-amber-500/50'
+                    )}>
+                    Ausbildung beenden
+                </Link>
                 <Button variant={'brand'}>Speichern</Button>
             </div>
         </Form>

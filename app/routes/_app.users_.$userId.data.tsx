@@ -14,6 +14,10 @@ import { z, ZodError } from 'zod';
 import { errors } from '~/messages/errors';
 import { TrainingPhase } from '.prisma/client';
 import { isStudentData } from '~/utils/user/student-data';
+import { Separator } from '~/components/ui/Seperator';
+import { getAddressByCoordinates } from '~/utils/bing-maps';
+import { BingMapsResponse } from '~/types/bing-maps-response';
+import { toastMessage } from '~/utils/flash/toast.server';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const userId = requireParameter('userId', params);
@@ -22,7 +26,10 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
         where: { drivingSchoolId: user.drivingSchoolId, role: 'INSTRUCTOR' },
     });
     const data = await getUserData(user);
-    return json({ data, user, instructors });
+    const address = isStudentData(data, user)
+        ? await getAddressByCoordinates(data.pickupLat, data.pickupLng).then((res) => res.data)
+        : undefined;
+    return json({ data, user, instructors, address });
 };
 
 const studentDataSchema = zfd.formData({
@@ -33,8 +40,8 @@ const studentDataSchema = zfd.formData({
     trainingClass: zfd.text(),
     trainingPhase: zfd.text(),
     waitingTime: zfd.numeric(),
-    addressLat: zfd.text(z.string().optional()),
-    addressLng: zfd.text(z.string().optional()),
+    pickupLat: zfd.text(z.string().optional()),
+    pickupLng: zfd.text(z.string().optional()),
 });
 
 interface ActionData {
@@ -61,8 +68,8 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
                                 : data.trainingPhase === 'EXTENSIVE'
                                 ? TrainingPhase.EXTENSIVE
                                 : TrainingPhase.DEFAULT,
-                        pickupLat: data.addressLat ? parseFloat(data.addressLat) : undefined,
-                        pickupLng: data.addressLng ? parseFloat(data.addressLng) : undefined,
+                        pickupLat: data.pickupLat ? parseFloat(data.pickupLat) : undefined,
+                        pickupLng: data.pickupLng ? parseFloat(data.pickupLng) : undefined,
                     },
                     create: {
                         ...data,
@@ -72,12 +79,22 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
                                 : data.trainingPhase === 'EXTENSIVE'
                                 ? TrainingPhase.EXTENSIVE
                                 : TrainingPhase.DEFAULT,
-                        pickupLat: data.addressLat ? parseFloat(data.addressLat) : undefined,
-                        pickupLng: data.addressLng ? parseFloat(data.addressLng) : undefined,
+                        pickupLat: data.pickupLat ? parseFloat(data.pickupLat) : undefined,
+                        pickupLng: data.pickupLng ? parseFloat(data.pickupLng) : undefined,
                         userId: user.id,
                     },
                 });
-                return redirect('/users');
+                return json(
+                    { message: 'success' },
+                    {
+                        headers: {
+                            'Set-Cookie': await toastMessage(request, {
+                                title: 'Erfolg',
+                                description: 'Stammdaten erfolgreich gespeichert',
+                            }),
+                        },
+                    }
+                );
             }
             case 'INSTRUCTOR': {
                 //TODO: Add instructor data
@@ -98,27 +115,27 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 };
 
 const SetupUserDataPage = () => {
-    const { data, user, instructors } = useLoaderData<typeof loader>();
+    const { data, user, instructors, address } = useLoaderData<typeof loader>();
     const navigate = useNavigate();
     const actionData = useActionData<ActionData>();
     return (
-        <Modal open={true} onClose={() => navigate('/users')}>
-            <Card className={'border-none shadow-none p-0'}>
-                <div className={'grid gap-2'}>
-                    <CardTitle>Stammdaten bearbeiten</CardTitle>
-                    <CardDescription>{`${user.firstName} ${user.lastName}`}</CardDescription>
-                </div>
-                <div className={'mt-5'}>
-                    {isStudentData(data, user) && (
-                        <StudentDataForm
-                            studentData={data}
-                            instructors={instructors}
-                            errors={actionData?.formValidationErrors}
-                        />
-                    )}
-                </div>
-            </Card>
-        </Modal>
+        <div className={'w-full'}>
+            <div>
+                <h3 className='text-lg font-medium'>Stammdaten</h3>
+                <p className='text-sm text-muted-foreground'>
+                    Hier können die Stammdaten eines Fahrschülers / Fahrlehrers bearbeitet werden
+                </p>
+            </div>
+            <Separator className={'my-6'} />
+            {isStudentData(data, user) && (
+                <StudentDataForm
+                    currentAddress={address?.resourceSets[0].resources[0]}
+                    studentData={data}
+                    instructors={instructors}
+                    errors={actionData?.formValidationErrors}
+                />
+            )}
+        </div>
     );
 };
 

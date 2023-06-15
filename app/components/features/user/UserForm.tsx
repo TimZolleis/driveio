@@ -9,6 +9,7 @@ import {
 } from '~/components/ui/Select';
 import { Button, buttonVariants } from '~/components/ui/Button';
 import { Form, Link } from '@remix-run/react';
+import { Label } from '~/components/ui/Label';
 
 interface UserFormProps {
     user: User;
@@ -19,19 +20,28 @@ interface UserFormProps {
 
 export const UserForm = ({ user, errors }: UserFormProps) => {
     return (
-        <Form method={'post'} className={'mt-5'}>
-            <div className={'grid md:grid-cols-2 gap-3'}>
-                <Input
-                    required
-                    name={'firstName'}
-                    defaultValue={user.firstName}
-                    placeholder={'Max'}></Input>
-                <Input
-                    required
-                    name={'lastName'}
-                    defaultValue={user.lastName}
-                    placeholder={'Mustermann'}></Input>
+        <Form method={'post'} className={'w-full'}>
+            <div className={'grid gap-3'}>
                 <div>
+                    <Label>Vorname</Label>
+                    <Input
+                        required
+                        name={'firstName'}
+                        defaultValue={user.firstName}
+                        placeholder={'Max'}
+                    />
+                </div>
+                <div>
+                    <Label>Nachname</Label>
+                    <Input
+                        required
+                        name={'lastName'}
+                        defaultValue={user.lastName}
+                        placeholder={'Mustermann'}
+                    />
+                </div>
+                <div>
+                    <Label>Email</Label>
                     <Input
                         required
                         name={'email'}
@@ -40,6 +50,7 @@ export const UserForm = ({ user, errors }: UserFormProps) => {
                     <p className={'text-destructive text-sm p-1'}>{errors?.email[0]}</p>
                 </div>
                 <div>
+                    <Label>Rolle</Label>
                     <Select name={'role'} defaultValue={user.role.toLowerCase()} disabled={true}>
                         <SelectTrigger className='w-full'>
                             <SelectValue placeholder='Rolle' />
@@ -56,13 +67,18 @@ export const UserForm = ({ user, errors }: UserFormProps) => {
                     </p>
                 </div>
             </div>
-            <div className={'flex gap-3 justify-end mt-5'}>
+            <div className={'flex gap-3 justify-between mt-5'}>
                 <Link
-                    to={`/users/${user.id}/delete`}
-                    className={buttonVariants({ variant: 'destructive' })}>
-                    Löschen
+                    className={buttonVariants({ variant: 'destructive' })}
+                    to={`/users/${user.id}/delete`}>
+                    Benutzer löschen
                 </Link>
-                <Button variant={'brand'}>Speichern</Button>
+                <div className={'flex justify-self-end gap-3'}>
+                    <Link to={`/users`} className={buttonVariants({ variant: 'outline' })}>
+                        Abbruch
+                    </Link>
+                    <Button variant={'brand'}>Speichern</Button>
+                </div>
             </div>
         </Form>
     );
