@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model DrivingSchool {
+  id    String @id @default(uuid())
+  name  String
+  users User[]
+}
+
+model User {
+  id              String          @id @default(uuid())
+  firstName       String
+  lastName        String
+  password        String?
+  email           String          @unique
+  role            ROLE
+  admin           Boolean
+  registration    Registration?
+  drivingSchool   DrivingSchool   @relation(fields: [drivingSchoolId], references: [id])
+  drivingSchoolId String
+  studentData     StudentData?
+  instructorData  InstructorData?
+  managementData  ManagementData?
+}
+
+model StudentData {
+  userId        String        @id
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instructorId  String?
+  trainingBegin String?
+  trainingEnd   String?
+  trainingClass String
+  dateOfBirth   String
+  pickupLat     Float?
+  pickupLng     Float?
+  waitingTime   Float
+  trainingPhase TrainingPhase
+}
+
+enum TrainingPhase {
+  DEFAULT
+  EXTENSIVE
+  EXAM_PREPARATION
+}
+
+model InstructorData {
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model ManagementData {
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Registration {
+  id        String   @id @default(uuid())
+  code      Int      @unique
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+enum ROLE {
+  STUDENT
+  INSTRUCTOR
+  MANAGEMENT
+}
