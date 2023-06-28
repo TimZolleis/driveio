@@ -30,6 +30,7 @@ model User {
   studentData     StudentData?
   instructorData  InstructorData?
   managementData  ManagementData?
+  blockings       Blocking[]
 }
 
 model StudentData {
@@ -58,9 +59,21 @@ enum TrainingPhase {
   EXAM_PREPARATION
 }
 
-model InstructorData {
-  userId String @id
-  user   User   @relation(fields: [userId], references: [id])
+model Blocking {
+  id        String  @id @default(uuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  name      String?
+  startDate String
+  endDate   String
+  repeat    REPEAT
+}
+enum REPEAT {
+  NEVER
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
 }
 
 model ManagementData {

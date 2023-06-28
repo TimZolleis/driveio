@@ -1,14 +1,12 @@
-import { SidebarNav } from '~/components/features/SideNavigation';
-import { Link, Outlet, useLoaderData } from '@remix-run/react';
-import { getFullName } from '~/utils/hooks/user';
-import { DataFunctionArgs, defer } from '@remix-run/node';
-import { requireParameter } from '~/utils/general-utils';
-import { prisma } from '../../prisma/db';
-import { requireResult } from '~/utils/db/require-result.server';
-import { Suspense, useRef } from 'react';
-import { Await } from 'react-router';
-import { Separator } from '~/components/ui/Seperator';
+import { DataFunctionArgs, json } from '@remix-run/node';
 import { ChevronLeft } from 'lucide-react';
+import { Link, Outlet, useLoaderData } from '@remix-run/react';
+import { Suspense } from 'react';
+import { Await } from 'react-router';
+import { getFullName } from '~/utils/hooks/user';
+import { Separator } from '~/components/ui/Seperator';
+import { SidebarNav } from '~/components/features/SideNavigation';
+import { requireManagementPermissions, requireUser } from '~/utils/user/user.server';
 import { User } from '.prisma/client';
 
 const sidebarNavItems = (user?: User) => [
@@ -18,36 +16,28 @@ const sidebarNavItems = (user?: User) => [
         show: true,
     },
     {
-        title: 'Stammdaten',
-        href: 'data',
-        show: true,
-    },
-    {
-        title: 'Registrierung',
-        href: 'registration',
-        show: true,
+        title: 'Blockierungen',
+        href: 'blocked-slots',
+        show: user?.role === 'INSTRUCTOR',
     },
 ];
+
 export const loader = async ({ request, params }: DataFunctionArgs) => {
-    const userId = requireParameter('userId', params);
-    const user = await prisma.user
-        .findUnique({ where: { id: userId } })
-        .then(requireResult)
-        .catch();
-    return defer({ user });
+    const user = await requireUser(request);
+    return json({ user });
 };
 
-const UserDetailsPage = () => {
+export const action = async ({ request, params }: DataFunctionArgs) => {
+    return null;
+};
+
+const Me = () => {
     const { user } = useLoaderData<typeof loader>();
     return (
         <div className={''}>
             <div className={'space-y-6 pb-6 px-10'}>
                 <div className='space-y-0.5 mb-6'>
-                    <div className={'flex items-center text-brand-800'}>
-                        <ChevronLeft size={18} />
-                        <Link to={'/users'}>Alle Benutzer</Link>
-                    </div>
-                    <h2 className='text-2xl font-bold tracking-tight'>Benutzer bearbeiten</h2>
+                    <h2 className='text-2xl font-bold tracking-tight'>Meine Daten</h2>
                     <Suspense
                         fallback={<div className={'w-60 h-10 bg-gray-100 rounded-full'}></div>}>
                         <Await resolve={user}>
@@ -64,4 +54,4 @@ const UserDetailsPage = () => {
         </div>
     );
 };
-export default UserDetailsPage;
+export default Me;

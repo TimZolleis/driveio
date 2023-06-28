@@ -1,5 +1,11 @@
+import { z } from 'zod';
+
 export const errors = {
     unknown: 'Ein unbekannter Fehler ist aufgetreten',
+    general: {
+        required: 'Dieses Feld darf nicht leer sein',
+        mismatch: 'Bitte gib ein gültiges Format ein',
+    },
     login: {
         email: {
             required: 'Bitte gib eine E-Mail an',
@@ -28,5 +34,17 @@ export const errors = {
     },
     form: {
         notEmpty: 'Dieses Feld darf nicht leer sein',
+        invalidTime: 'Bitte gib eine gültige Uhrzeit ein (hh:mm)',
     },
 };
+const zodErrorMap: z.ZodErrorMap = (issue, ctx) => {
+    if (issue.code === z.ZodIssueCode.invalid_type && issue.received === 'undefined') {
+        return { message: errors.general.required };
+    }
+    if (issue.code === z.ZodIssueCode.invalid_string && issue.validation === 'regex') {
+        return { message: errors.general.mismatch };
+    }
+
+    return { message: ctx.defaultError };
+};
+z.setErrorMap(zodErrorMap);

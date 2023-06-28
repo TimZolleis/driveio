@@ -10,6 +10,7 @@ import {
 import { Button, buttonVariants } from '~/components/ui/Button';
 import { Form, Link } from '@remix-run/react';
 import { Label } from '~/components/ui/Label';
+import { FormDescription } from '~/components/ui/FormDescription';
 
 interface UserFormProps {
     user: User;
@@ -61,10 +62,10 @@ export const UserForm = ({ user, errors }: UserFormProps) => {
                             <SelectItem value='management'>Verwaltung</SelectItem>
                         </SelectContent>
                     </Select>
-                    <p className={'text-muted-foreground text-xs mt-2'}>
+                    <Label variant={'description'}>
                         Aus Sicherheitsgründen kann die Rolle eines Benutzers nicht mehr geändert
                         werden.
-                    </p>
+                    </Label>
                 </div>
             </div>
             <div className={'flex gap-3 justify-between mt-5'}>
