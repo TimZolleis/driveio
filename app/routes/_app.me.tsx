@@ -11,11 +11,6 @@ import { User } from '.prisma/client';
 
 const sidebarNavItems = (user?: User) => [
     {
-        title: 'Generell',
-        href: 'edit',
-        show: true,
-    },
-    {
         title: 'Blockierungen',
         href: 'blocked-slots',
         show: user?.role === 'INSTRUCTOR',

@@ -6,6 +6,7 @@ import { requireManagementPermissions } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
 import { Label } from '~/components/ui/Label';
 import { BlockingCard } from '~/components/features/blocking/BlockingCard';
+import { Card, CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireManagementPermissions(request);
@@ -38,8 +39,9 @@ const InstructorBlockingsPage = () => {
                 </Link>
             </div>
             <Separator className={'my-6'} />
-            <div>
+            <div className={'space-y-2'}>
                 <Label>Wiederkehrend</Label>
+                <Separator />
                 <div className={'grid gap-2'}>
                     {blockings
                         .filter((blocking) => blocking.repeat !== 'NEVER')
@@ -47,9 +49,15 @@ const InstructorBlockingsPage = () => {
                             <BlockingCard key={blocking.id} blocking={blocking} />
                         ))}
                 </div>
+                <div>
+                    {blockings.filter((blocking) => blocking.repeat !== 'NEVER').length < 1 && (
+                        <NoBlockedSlots />
+                    )}
+                </div>
             </div>
-            <div>
+            <div className={'space-y-2 mt-2'}>
                 <Label>Einmalig</Label>
+                <Separator />
                 <div className={'grid gap-2'}>
                     {blockings
                         .filter((blocking) => blocking.repeat === 'NEVER')
@@ -57,8 +65,26 @@ const InstructorBlockingsPage = () => {
                             <BlockingCard key={blocking.id} blocking={blocking} />
                         ))}
                 </div>
+                <div>
+                    {blockings.filter((blocking) => blocking.repeat === 'NEVER').length < 1 && (
+                        <NoBlockedSlots />
+                    )}
+                </div>
             </div>
         </div>
+    );
+};
+
+const NoBlockedSlots = () => {
+    return (
+        <Card className={'shadow-none'}>
+            <CardHeader>
+                <CardTitle>Keine Blockierungen vorhanden</CardTitle>
+                <CardDescription>
+                    Füge eine neue Blockierung hinzu, um diese hier anzuzeigen.
+                </CardDescription>
+            </CardHeader>
+        </Card>
     );
 };
 

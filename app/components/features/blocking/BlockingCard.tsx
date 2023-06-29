@@ -9,7 +9,7 @@ import {
 } from '~/components/ui/Dropdown';
 import { Button } from '~/components/ui/Button';
 import { MoreVertical } from 'lucide-react';
-import { Form, Link } from '@remix-run/react';
+import { Form, Link, useFetcher } from '@remix-run/react';
 
 const repeat = {
     NEVER: 'Nie',
@@ -20,6 +20,7 @@ const repeat = {
 };
 
 export const BlockingCard = ({ blocking }: { blocking: Blocking }) => {
+    const fetcher = useFetcher();
     return (
         <div className={'p-3 rounded-md border text-sm flex justify-between items-center'}>
             <div>
@@ -41,15 +42,16 @@ export const BlockingCard = ({ blocking }: { blocking: Blocking }) => {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end'>
-                        <Link to={`${blocking.id}/edit`}>
+                        <Link to={blocking.id}>
                             <DropdownMenuItem>Bearbeiten</DropdownMenuItem>
                         </Link>
                         <Form method={'POST'} className={'w-full'}>
                             {/*TODO: REVISE CLICKABILITY*/}
-                            <DropdownMenuItem>
-                                <button name={'blocking'} value={blocking.id}>
-                                    Löschen
-                                </button>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    fetcher.submit({ blocking: blocking.id }, { method: 'POST' })
+                                }>
+                                Löschen
                             </DropdownMenuItem>
                         </Form>
                     </DropdownMenuContent>

@@ -63,7 +63,7 @@ model Blocking {
   id        String  @id @default(uuid())
   userId    String
   user      User    @relation(fields: [userId], references: [id])
-  name      String?
+  name      String? @default("Blockierter Zeitraum")
   startDate String
   endDate   String
   repeat    REPEAT

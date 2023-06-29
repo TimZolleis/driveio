@@ -11,7 +11,6 @@ import { useActionData, useLoaderData } from '@remix-run/react';
 import { UserForm } from '~/components/features/user/UserForm';
 import { requireResult } from '~/utils/db/require-result.server';
 import { toastMessage } from '~/utils/flash/toast.server';
-import { differentiateCatchVersusErrorBoundaries } from '@remix-run/server-runtime/dist/server';
 import { Separator } from '~/components/ui/Seperator';
 
 const editUserFormSchema = zfd.formData({
@@ -73,11 +72,6 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 const AddUserPage = () => {
     const { user } = useLoaderData<typeof loader>();
     const data = useActionData<ActionData>();
-    const navigate = useNavigate();
-    const onClose = () => {
-        navigate('/users');
-    };
-
     return (
         <div className={'w-full'}>
             <div>
