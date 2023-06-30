@@ -14,6 +14,6 @@ export const loader = async ({ request }: DataFunctionArgs) => {
 
 const Index = () => {
     const data = useLoaderData<typeof loader>();
-    return <div>{data.user?.firstName}</div>;
+    return <h3 className={'font-semibold text-2xl'}>Hallo, {data.user?.firstName}!</h3>;
 };
 export default Index;

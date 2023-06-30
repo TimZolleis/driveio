@@ -13,11 +13,12 @@ import { zfd } from 'zod-form-data';
 import { z, ZodError } from 'zod';
 import { errors } from '~/messages/errors';
 import { TrainingPhase } from '.prisma/client';
-import { isStudentData } from '~/utils/user/student-data';
+import { isInstructorData, isStudentData } from '~/utils/user/student-data';
 import { Separator } from '~/components/ui/Seperator';
 import { getAddressByCoordinates } from '~/utils/bing-maps';
 import { BingMapsResponse } from '~/types/bing-maps-response';
 import { toastMessage } from '~/utils/flash/toast.server';
+import { InstructorDataForm } from '~/components/features/user/instructor/InstructorDataForm';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const userId = requireParameter('userId', params);
@@ -38,10 +39,17 @@ const studentDataSchema = zfd.formData({
     dateOfBirth: zfd.text(z.string({ required_error: errors.form.notEmpty })),
     instructorId: zfd.text(z.string({ required_error: errors.form.notEmpty })),
     trainingClass: zfd.text(),
-    trainingPhase: zfd.text(),
+    trainingPhase: zfd.text(z.enum(['EXAM_PREPARATION', 'DEFAULT', 'EXTENSIVE'])),
     waitingTime: zfd.numeric(),
     pickupLat: zfd.text(z.string().optional()),
     pickupLng: zfd.text(z.string().optional()),
+});
+
+const instructorDataSchema = zfd.formData({
+    dailyDrivingMinutes: zfd.numeric(),
+    maxDefaultLessons: zfd.numeric(),
+    maxExtensiveLessons: zfd.numeric(),
+    maxExampreparationLessons: zfd.numeric(),
 });
 
 interface ActionData {
@@ -62,42 +70,25 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
                     where: { userId: user.id },
                     update: {
                         ...data,
-                        trainingPhase:
-                            data.trainingPhase === 'EXAM_PREPARATION'
-                                ? TrainingPhase.EXAM_PREPARATION
-                                : data.trainingPhase === 'EXTENSIVE'
-                                ? TrainingPhase.EXTENSIVE
-                                : TrainingPhase.DEFAULT,
                         pickupLat: data.pickupLat ? parseFloat(data.pickupLat) : undefined,
                         pickupLng: data.pickupLng ? parseFloat(data.pickupLng) : undefined,
                     },
                     create: {
                         ...data,
-                        trainingPhase:
-                            data.trainingPhase === 'EXAM_PREPARATION'
-                                ? TrainingPhase.EXAM_PREPARATION
-                                : data.trainingPhase === 'EXTENSIVE'
-                                ? TrainingPhase.EXTENSIVE
-                                : TrainingPhase.DEFAULT,
                         pickupLat: data.pickupLat ? parseFloat(data.pickupLat) : undefined,
                         pickupLng: data.pickupLng ? parseFloat(data.pickupLng) : undefined,
                         userId: user.id,
                     },
                 });
-                return json(
-                    { message: 'success' },
-                    {
-                        headers: {
-                            'Set-Cookie': await toastMessage(request, {
-                                title: 'Erfolg',
-                                description: 'Stammdaten erfolgreich gespeichert',
-                            }),
-                        },
-                    }
-                );
+                break;
             }
             case 'INSTRUCTOR': {
-                //TODO: Add instructor data
+                const data = instructorDataSchema.parse(formData);
+                await prisma.instructorData.upsert({
+                    where: { userId: user.id },
+                    update: data,
+                    create: { ...data, userId: user.id },
+                });
                 break;
             }
             case 'MANAGEMENT': {
@@ -106,12 +97,21 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
             }
         }
     } catch (error) {
-        console.log(error);
         if (error instanceof ZodError) {
             return json({ formValidationErrors: error.formErrors.fieldErrors });
         }
     }
-    return null;
+    return json(
+        { message: 'success' },
+        {
+            headers: {
+                'Set-Cookie': await toastMessage(request, {
+                    title: 'Erfolg',
+                    description: 'Stammdaten erfolgreich gespeichert',
+                }),
+            },
+        }
+    );
 };
 
 const SetupUserDataPage = () => {
@@ -134,6 +134,9 @@ const SetupUserDataPage = () => {
                     instructors={instructors}
                     errors={actionData?.formValidationErrors}
                 />
+            )}
+            {isInstructorData(data, user) && (
+                <InstructorDataForm instructorData={data}></InstructorDataForm>
             )}
         </div>
     );

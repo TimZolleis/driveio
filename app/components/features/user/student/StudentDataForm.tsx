@@ -151,6 +151,9 @@ export const StudentDataForm = ({
                     )}>
                     Ausbildung beenden
                 </Link>
+                <Link to={'/users'} className={buttonVariants({ variant: 'secondary' })}>
+                    Abbrechen
+                </Link>
                 <Button variant={'brand'}>Speichern</Button>
             </div>
         </Form>
