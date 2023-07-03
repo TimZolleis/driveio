@@ -10,7 +10,7 @@ import { DateTime } from 'luxon';
 import { requireManagementPermissions } from '~/utils/user/user.server';
 import { BlockingForm } from '~/components/features/blocking/BlockingForm';
 
-const timeFormatSchema = z.string().regex(/^\d{2}:\d{2}$/, errors.form.invalidTime);
+export const timeFormatSchema = z.string().regex(/^\d{2}:\d{2}$/, errors.form.invalidTime);
 
 const addBlockingsSchema = zfd.formData({
     name: zfd.text(z.string().optional()),

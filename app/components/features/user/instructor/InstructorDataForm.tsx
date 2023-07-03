@@ -12,15 +12,34 @@ interface InstructorDataFormProps {
 }
 
 export const InstructorDataForm = ({ instructorData, errors }: InstructorDataFormProps) => {
+    console.log(errors);
     return (
         <Form method={'post'}>
-            <div className={'grid gap-2'}>
+            <h4 className='font-medium'>Generell</h4>
+            <div className={'grid gap-2 mt-2'}>
                 <Label>Tägliche Fahrtzeit</Label>
                 <Input
+                    error={errors?.dailyDrivingMinutes?.[0]}
                     defaultValue={instructorData?.dailyDrivingMinutes || 415}
                     name={'dailyDrivingMinutes'}></Input>
-                <p className={'text-xs text-destructive'}>{errors?.dailyDrivingMinutes[0]}</p>
             </div>
+            <div className={'grid grid-cols-2 gap-2'}>
+                <div>
+                    <Label>Arbeitsbeginn</Label>
+                    <Input
+                        name={'workStartTime'}
+                        error={errors?.workStartTime?.[0]}
+                        defaultValue={instructorData?.workStartTime || '08:00'}></Input>
+                </div>
+                <div>
+                    <Label>Arbeitsende</Label>
+                    <Input
+                        name={'workEndTime'}
+                        error={errors?.workEndTime?.[0]}
+                        defaultValue={instructorData?.workEndTime || '17:00'}></Input>
+                </div>
+            </div>
+
             <div className={'py-3'}>
                 <Separator />
             </div>

@@ -1,24 +1,20 @@
 import type { DataFunctionArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import { requireParameter } from '~/utils/general-utils';
 import { prisma } from '../../prisma/db';
 import { requireResult } from '~/utils/db/require-result.server';
 import { getUserData } from '~/utils/user/user.server';
 import { useActionData, useLoaderData } from '@remix-run/react';
-import { Modal } from '~/components/ui/Modal';
-import { useNavigate } from 'react-router';
-import { Card, CardDescription, CardTitle } from '~/components/ui/Card';
 import { StudentDataForm } from '~/components/features/user/student/StudentDataForm';
 import { zfd } from 'zod-form-data';
 import { z, ZodError } from 'zod';
 import { errors } from '~/messages/errors';
-import { TrainingPhase } from '.prisma/client';
 import { isInstructorData, isStudentData } from '~/utils/user/student-data';
 import { Separator } from '~/components/ui/Seperator';
 import { getAddressByCoordinates } from '~/utils/bing-maps';
-import { BingMapsResponse } from '~/types/bing-maps-response';
 import { toastMessage } from '~/utils/flash/toast.server';
 import { InstructorDataForm } from '~/components/features/user/instructor/InstructorDataForm';
+import { timeFormatSchema } from '~/routes/_app.me.blocked-slots.add';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const userId = requireParameter('userId', params);
@@ -27,9 +23,10 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
         where: { drivingSchoolId: user.drivingSchoolId, role: 'INSTRUCTOR' },
     });
     const data = await getUserData(user);
-    const address = isStudentData(data, user)
-        ? await getAddressByCoordinates(data.pickupLat, data.pickupLng).then((res) => res.data)
-        : undefined;
+    const address =
+        data && isStudentData(data, user)
+            ? await getAddressByCoordinates(data.pickupLat, data.pickupLng).then((res) => res.data)
+            : undefined;
     return json({ data, user, instructors, address });
 };
 
@@ -50,6 +47,8 @@ const instructorDataSchema = zfd.formData({
     maxDefaultLessons: zfd.numeric(),
     maxExtensiveLessons: zfd.numeric(),
     maxExampreparationLessons: zfd.numeric(),
+    workStartTime: zfd.text(timeFormatSchema),
+    workEndTime: zfd.text(timeFormatSchema),
 });
 
 interface ActionData {
@@ -84,6 +83,7 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
             }
             case 'INSTRUCTOR': {
                 const data = instructorDataSchema.parse(formData);
+                console.log(data);
                 await prisma.instructorData.upsert({
                     where: { userId: user.id },
                     update: data,
@@ -116,7 +116,6 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 
 const SetupUserDataPage = () => {
     const { data, user, instructors, address } = useLoaderData<typeof loader>();
-    const navigate = useNavigate();
     const actionData = useActionData<ActionData>();
     return (
         <div className={'w-full'}>
@@ -136,7 +135,9 @@ const SetupUserDataPage = () => {
                 />
             )}
             {isInstructorData(data, user) && (
-                <InstructorDataForm instructorData={data}></InstructorDataForm>
+                <InstructorDataForm
+                    instructorData={data}
+                    errors={actionData?.formValidationErrors}></InstructorDataForm>
             )}
         </div>
     );

@@ -51,6 +51,8 @@ model InstructorData {
   userId                    String @id
   user                      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   dailyDrivingMinutes       Float  @default(415)
+  workStartTime             String @default("08:00")
+  workEndTime               String @default("17:00")
   maxDefaultLessons         Int    @default(3)
   maxExtensiveLessons       Int    @default(4)
   maxExampreparationLessons Int    @default(5)
@@ -96,4 +98,20 @@ enum ROLE {
   STUDENT
   INSTRUCTOR
   MANAGEMENT
+}
+
+model DrivingLesson {
+  id           String       @id @default(uuid())
+  userId       String
+  instructorId String
+  start        String
+  end          String
+  status       LessonStatus
+  description  String?
+}
+
+enum LessonStatus {
+  REQUESTED
+  CONFIRMED
+  DECLINED
 }
