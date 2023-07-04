@@ -25,6 +25,7 @@ import {
     getAllAvailableSlots,
 } from '~/utils/booking/calculate-available-slots';
 import { getTimeFromISOString } from '~/utils/luxon/parse-hour-minute';
+import { AvailableLessonCard } from '~/components/features/booking/AvailableLessonCard';
 
 function getParameters(request: Request) {
     const url = new URL(request.url);
@@ -91,6 +92,7 @@ export const loader = async ({ request }: DataFunctionArgs) => {
     });
     //TODO: Add logic to add waiting time to the first available slot after a lesson
     //TODO: Foolproof and test filtering logic (especially with blocking)
+    //NOTE: This logic is still flawed, since it will remove too many lessons out of the grid. Revise logic and instead of removing, calculate lessons until the next boundary and start after the boundary has ended
     //After getting blocked slots and lessons, we can filter them out of the available slots
     const availableSlots = slots
         //The first filter function will filter out blocked slots
@@ -183,9 +185,9 @@ const BookPage = () => {
                     onSelect={updateDate}
                     className='rounded-md'
                 />
-                <div className={'py-2'}>
+                <div className={'py-2 w-full'}>
                     <div>
-                        <p className={'font-medium'}>Verfügbarkeit</p>
+                        <p className={'font-medium'}>Verfügbare Fahrstunden</p>
                         <p className={'text-muted-foreground text-sm'}>
                             {' '}
                             {date
@@ -193,9 +195,9 @@ const BookPage = () => {
                                 : 'Bitte wähle ein Datum aus'}
                         </p>
                     </div>
-                    <div>
+                    <div className={'grid grid-cols-2 gap-2 mt-5 '}>
                         {data.availableSlots.map((slot) => (
-                            <p>{slot.index}</p>
+                            <AvailableLessonCard key={slot.index} slot={slot} />
                         ))}
                     </div>
                 </div>

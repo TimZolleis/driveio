@@ -1,8 +1,8 @@
 import { parseHourAndMinuteToDateTime } from '~/utils/luxon/parse-hour-minute';
 import { DateTime, Duration, Interval } from 'luxon';
-import { Blocking } from '.prisma/client';
+import type { Blocking } from '.prisma/client';
 
-interface TimeSlot {
+export interface TimeSlot {
     index: number;
     start: string | null;
     end: string | null;
