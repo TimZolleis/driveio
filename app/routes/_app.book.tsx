@@ -1,7 +1,7 @@
-import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node';
-import { redirect } from '@remix-run/node';
+import type { DataFunctionArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { requireUser } from '~/utils/user/user.server';
-import { useRouteError, useSearchParams } from '@remix-run/react';
+import { useLoaderData, useRouteError, useSearchParams } from '@remix-run/react';
 import { errors } from '~/messages/errors';
 import { prisma } from '../../prisma/db';
 import { requireResult } from '~/utils/db/require-result.server';
@@ -10,7 +10,7 @@ import { PageHeader } from '~/components/ui/PageHeader';
 import { Label } from '~/components/ui/Label';
 import { Calendar } from '~/components/ui/Calendar';
 import { useState } from 'react';
-import { DateTime } from 'luxon';
+import { DateTime, Interval } from 'luxon';
 import {
     Select,
     SelectContent,
@@ -20,10 +20,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '~/components/ui/Select';
-
-export const meta: V2_MetaFunction = () => {
-    return [{ title: 'New Remix App' }, { name: 'description', content: 'Welcome to Remix!' }];
-};
+import {
+    filterBlockedSlots,
+    getAllAvailableSlots,
+} from '~/utils/booking/calculate-available-slots';
+import { getTimeFromISOString } from '~/utils/luxon/parse-hour-minute';
 
 function getParameters(request: Request) {
     const url = new URL(request.url);
@@ -59,42 +60,76 @@ export const loader = async ({ request }: DataFunctionArgs) => {
         .findUnique({ where: { userId: user.id } })
         .then((result) => requireResult(result, errors.student.noStudentData));
 
-    //TODO: Otherwise calculate the first available slot - and so on
     //Get working start and end time for instructor
     const instructorData = await prisma.instructorData
         .findUnique({ where: { userId: studentData.instructorId || undefined } })
         .then((result) => requireResult(result, errors.instructor.noInstructorData));
-    //Get all blocked slots for the instructor
+    //Get all possible slots based on working time of instructor
+    const slots = getAllAvailableSlots(
+        instructorData.workStartTime,
+        instructorData.workEndTime,
+        parseInt(parameters.duration)
+    );
+    //With all the possible slots, we can now subtract blocked times
     const blockedSlots = await prisma.blocking.findMany({
         where: { userId: instructorData.userId },
     });
-    //Filter out the repeating ones and determine which apply to the selected date
-    const repeatingBlockedSlots = blockedSlots
-        .filter((slot) => slot.repeat !== 'NEVER')
+
+    //We'll determine which of them apply today
+    const applicableBlockedSlots = blockedSlots.filter((slot) =>
+        filterBlockedSlots(slot, parameters.date)
+    );
+    //After getting all the slots, we have to get all booked lessons for this day to prevent double-booking
+    const lessons = await prisma.drivingLesson.findMany({
+        where: {
+            instructorId: instructorData.userId,
+            start: {
+                gte: parameters.date.startOf('day').toISO() || undefined,
+                lt: parameters.date.startOf('day').plus({ days: 1 }).toISO() || undefined,
+            },
+        },
+    });
+    //TODO: Add logic to add waiting time to the first available slot after a lesson
+    //TODO: Foolproof and test filtering logic (especially with blocking)
+    //After getting blocked slots and lessons, we can filter them out of the available slots
+    const availableSlots = slots
+        //The first filter function will filter out blocked slots
         .filter((slot) => {
-            const date = DateTime.fromISO(slot.startDate);
-            const selected = parameters.date;
-            if (slot.repeat === 'WEEKLY') {
-                return date.weekday === selected.weekday;
+            return applicableBlockedSlots.some((blockedSlot) => {
+                const blockedSlotInterval = Interval.fromDateTimes(
+                    getTimeFromISOString(blockedSlot.startDate),
+                    getTimeFromISOString(blockedSlot.endDate)
+                );
+                const slotInterval = Interval.fromDateTimes(
+                    getTimeFromISOString(slot.start),
+                    getTimeFromISOString(slot.end)
+                );
+                return !slotInterval.overlaps(blockedSlotInterval);
+            });
+        })
+        //The second filter function will remove lessons
+        .filter((slot) => {
+            if (lessons.length < 1) {
+                return true;
             }
-            if (slot.repeat === 'MONTHLY') {
-                return date.day === selected.day;
-            }
-            if (slot.repeat === 'YEARLY') {
-                return date.day === selected.day && date.month === selected.month;
-            }
-            return true;
+            return lessons.some((lesson) => {
+                const slotInterval = Interval.fromDateTimes(
+                    DateTime.fromISO(slot.start!),
+                    DateTime.fromISO(slot.end!)
+                );
+                const lessonInterval = Interval.fromDateTimes(
+                    DateTime.fromISO(lesson.start),
+                    DateTime.fromISO(lesson.end)
+                );
+                return slotInterval.overlaps(lessonInterval);
+            });
         });
-
-    // Get previous / later lessons and calculate the waiting time
-    // Calculate an array of available slots and show to users
-
-    return null;
+    return json({ availableSlots });
 };
 
-const Index = () => {
+const BookPage = () => {
+    const data = useLoaderData<typeof loader>();
     const [searchParams, setSearchParams] = useSearchParams();
-
     const date = searchParams.get('date');
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
         date ? DateTime.fromISO(date).toJSDate() : new Date()
@@ -149,16 +184,19 @@ const Index = () => {
                     className='rounded-md'
                 />
                 <div className={'py-2'}>
-                    <div className={'flex items-center gap-5'}>
-                        <div>
-                            <p className={'font-medium'}>Verfügbarkeit</p>
-                            <p className={'text-muted-foreground text-sm'}>
-                                {' '}
-                                {date
-                                    ? DateTime.fromISO(date).toLocaleString(DateTime.DATE_HUGE)
-                                    : 'Bitte wähle ein Datum aus'}
-                            </p>
-                        </div>
+                    <div>
+                        <p className={'font-medium'}>Verfügbarkeit</p>
+                        <p className={'text-muted-foreground text-sm'}>
+                            {' '}
+                            {date
+                                ? DateTime.fromISO(date).toLocaleString(DateTime.DATE_HUGE)
+                                : 'Bitte wähle ein Datum aus'}
+                        </p>
+                    </div>
+                    <div>
+                        {data.availableSlots.map((slot) => (
+                            <p>{slot.index}</p>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -170,4 +208,4 @@ export const ErrorBoundary = () => {
     const error = useRouteError();
     return <ErrorComponent error={error}></ErrorComponent>;
 };
-export default Index;
+export default BookPage;
