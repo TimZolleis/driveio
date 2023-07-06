@@ -17,7 +17,7 @@ export async function isSlotAvailable({ date, start, end, instructorId }: CheckS
 }
 
 export async function checkBlockOverlap({ date, start, end, instructorId }: CheckSlotProps) {
-    const blockedSlots = await prisma.blocking
+    const blockedSlots = await prisma.blockedSlot
         .findMany({ where: { userId: instructorId } })
         .then((result) => result.filter((slot) => filterBlockedSlots(slot, date)));
     return blockedSlots.some((slot) => {

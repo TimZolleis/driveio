@@ -30,7 +30,7 @@ model User {
   studentData     StudentData?
   instructorData  InstructorData?
   managementData  ManagementData?
-  blockings       Blocking[]
+  blockedSlots    BlockedSlot[]
 }
 
 model StudentData {
@@ -64,7 +64,7 @@ enum TrainingPhase {
   EXAM_PREPARATION
 }
 
-model Blocking {
+model BlockedSlot {
   id        String  @id @default(uuid())
   userId    String
   user      User    @relation(fields: [userId], references: [id])

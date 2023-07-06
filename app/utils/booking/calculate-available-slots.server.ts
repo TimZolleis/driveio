@@ -3,7 +3,7 @@ import {
     parseHourAndMinuteToDateTime,
 } from '~/utils/luxon/parse-hour-minute';
 import { DateTime, Interval } from 'luxon';
-import type { Blocking, DrivingLesson } from '.prisma/client';
+import type { BlockedSlot, DrivingLesson } from '.prisma/client';
 
 export interface TimeSlot {
     start: string;
@@ -14,7 +14,7 @@ type FindAvailableSlotProps = {
     workStart: string;
     workEnd: string;
     slotDuration: number;
-    blockedSlots: Blocking[];
+    blockedSlots: BlockedSlot[];
     bookedLessons: DrivingLesson[];
     waitingTimeAfterLesson: number;
 };
@@ -100,7 +100,7 @@ export function checkOverlap(slot1: Slot, slot2: Slot) {
     return slot1StartsBeforeSlot2Ends && slot1EndsBeforeSlot2Starts;
 }
 
-export function filterBlockedSlots(slot: Blocking, selectedDate: DateTime) {
+export function filterBlockedSlots(slot: BlockedSlot, selectedDate: DateTime) {
     const startDate = DateTime.fromISO(slot.startDate);
     const endDate = DateTime.fromISO(slot.endDate);
     /**

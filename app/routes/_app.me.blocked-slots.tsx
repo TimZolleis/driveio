@@ -1,29 +1,32 @@
 import { Link, Outlet, useLoaderData } from '@remix-run/react';
 import { Separator } from '~/components/ui/Seperator';
 import { buttonVariants } from '~/components/ui/Button';
-import { DataFunctionArgs, json } from '@remix-run/node';
+import type { DataFunctionArgs } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import { requireManagementPermissions } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
 import { Label } from '~/components/ui/Label';
-import { BlockingCard } from '~/components/features/blocking/BlockingCard';
+import { BlockedSlotCard } from '~/components/features/blocked-slots/BlockedSlotCard';
 import { Card, CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireManagementPermissions(request);
-    const blockings = await prisma.blocking.findMany({ where: { userId: user.id } });
+    const blockedSlots = await prisma.blockedSlot.findMany({ where: { userId: user.id } });
 
-    return json({ blockings });
+    return json({ blockedSlots });
 };
 
 export const action = async ({ request, params }: DataFunctionArgs) => {
     await requireManagementPermissions(request);
-    const blockingId = await request.formData().then((data) => data.get('blocking')?.toString());
-    await prisma.blocking.delete({ where: { id: blockingId } });
+    const blockedSlotId = await request
+        .formData()
+        .then((data) => data.get('blockedSlot')?.toString());
+    await prisma.blockedSlot.delete({ where: { id: blockedSlotId } });
     return null;
 };
 
-const InstructorBlockingsPage = () => {
-    const { blockings } = useLoaderData<typeof loader>();
+const InstructorBlockedSlotsPage = () => {
+    const { blockedSlots } = useLoaderData<typeof loader>();
     return (
         <div className={'w-full'}>
             <Outlet />
@@ -43,32 +46,30 @@ const InstructorBlockingsPage = () => {
                 <Label>Wiederkehrend</Label>
                 <Separator />
                 <div className={'grid gap-2'}>
-                    {blockings
-                        .filter((blocking) => blocking.repeat !== 'NEVER')
-                        .map((blocking) => (
-                            <BlockingCard key={blocking.id} blocking={blocking} />
+                    {blockedSlots
+                        .filter((blockedSlot) => blockedSlot.repeat !== 'NEVER')
+                        .map((blockedSlot) => (
+                            <BlockedSlotCard key={blockedSlot.id} blockedSlot={blockedSlot} />
                         ))}
                 </div>
                 <div>
-                    {blockings.filter((blocking) => blocking.repeat !== 'NEVER').length < 1 && (
-                        <NoBlockedSlots />
-                    )}
+                    {blockedSlots.filter((blockedSlot) => blockedSlot.repeat !== 'NEVER').length <
+                        1 && <NoBlockedSlots />}
                 </div>
             </div>
             <div className={'space-y-2 mt-2'}>
                 <Label>Einmalig</Label>
                 <Separator />
                 <div className={'grid gap-2'}>
-                    {blockings
-                        .filter((blocking) => blocking.repeat === 'NEVER')
-                        .map((blocking) => (
-                            <BlockingCard key={blocking.id} blocking={blocking} />
+                    {blockedSlots
+                        .filter((blockedSlot) => blockedSlot.repeat === 'NEVER')
+                        .map((blockedSlot) => (
+                            <BlockedSlotCard key={blockedSlot.id} blockedSlot={blockedSlot} />
                         ))}
                 </div>
                 <div>
-                    {blockings.filter((blocking) => blocking.repeat === 'NEVER').length < 1 && (
-                        <NoBlockedSlots />
-                    )}
+                    {blockedSlots.filter((blockedSlot) => blockedSlot.repeat === 'NEVER').length <
+                        1 && <NoBlockedSlots />}
                 </div>
             </div>
         </div>
@@ -88,4 +89,4 @@ const NoBlockedSlots = () => {
     );
 };
 
-export default InstructorBlockingsPage;
+export default InstructorBlockedSlotsPage;

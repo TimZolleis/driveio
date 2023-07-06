@@ -1,19 +1,20 @@
 import { useActionData, useLoaderData } from '@remix-run/react';
-import { DataFunctionArgs, json, redirect } from '@remix-run/node';
+import type { DataFunctionArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { requireManagementPermissions } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
 import { requireParameter } from '~/utils/general-utils';
 import { requireResult } from '~/utils/db/require-result.server';
 import { Modal } from '~/components/ui/Modal';
-import { BlockingForm } from '~/components/features/blocking/BlockingForm';
+import { BlockedSlotForm } from '~/components/features/blocked-slots/BlockedSlotForm';
 import { ZodError } from 'zod';
 import { errors } from '~/messages/errors';
-import { getBlockingFromFormData } from '~/routes/_app.me.blocked-slots.add';
+import { getBlockedSlotFromFormData } from '~/routes/_app.me.blocked-slots.add';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireManagementPermissions(request);
     const slotId = requireParameter('slotId', params);
-    const blockedSlot = await prisma.blocking
+    const blockedSlot = await prisma.blockedSlot
         .findUnique({ where: { id: slotId } })
         .then(requireResult);
 
@@ -24,8 +25,8 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
     try {
         const slotId = requireParameter('slotId', params);
         const user = await requireManagementPermissions(request);
-        const { data, startDate, endDate } = getBlockingFromFormData(await request.formData());
-        await prisma.blocking.update({
+        const { data, startDate, endDate } = getBlockedSlotFromFormData(await request.formData());
+        await prisma.blockedSlot.update({
             where: {
                 id: slotId,
             },
@@ -46,15 +47,15 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
     }
 };
 
-const InstructorBlockingsPage = () => {
+const InstructorBlockedSlotsPage = () => {
     const { blockedSlot } = useLoaderData<typeof loader>();
     const actionData = useActionData();
     const formErrors = actionData?.formValidationErrors;
     return (
         <Modal open={true}>
-            <BlockingForm intent={'EDIT'} blocking={blockedSlot} errors={formErrors} />
+            <BlockedSlotForm intent={'EDIT'} blockedSlot={blockedSlot} errors={formErrors} />
         </Modal>
     );
 };
 
-export default InstructorBlockingsPage;
+export default InstructorBlockedSlotsPage;

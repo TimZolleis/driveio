@@ -8,23 +8,23 @@ import { errors } from '~/messages/errors';
 import { prisma } from '../../prisma/db';
 import { DateTime } from 'luxon';
 import { requireManagementPermissions } from '~/utils/user/user.server';
-import { BlockingForm } from '~/components/features/blocking/BlockingForm';
+import { BlockedSlotForm } from '~/components/features/blocked-slots/BlockedSlotForm';
 
 export const timeFormatSchema = z.string().regex(/^\d{2}:\d{2}$/, errors.form.invalidTime);
 
-const addBlockingsSchema = zfd.formData({
+const addBlockedSlotsSchema = zfd.formData({
     name: zfd.text(z.string().optional()),
-    blockingStartDate: zfd.text(),
-    blockingStartTime: zfd.text(timeFormatSchema),
-    blockingEndDate: zfd.text(),
-    blockingEndTime: zfd.text(timeFormatSchema),
+    blockedSlotStartDate: zfd.text(),
+    blockedSlotStartTime: zfd.text(timeFormatSchema),
+    blockedSlotEndDate: zfd.text(),
+    blockedSlotEndTime: zfd.text(timeFormatSchema),
     repeat: zfd.text(z.enum(['NEVER', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'])),
 });
 
-export function getBlockingFromFormData(formData: FormData) {
-    const data = addBlockingsSchema.parse(formData);
-    const startDate = parseDateTime(data.blockingStartDate, data.blockingStartTime).toISO();
-    const endDate = parseDateTime(data.blockingEndDate, data.blockingEndTime).toISO();
+export function getBlockedSlotFromFormData(formData: FormData) {
+    const data = addBlockedSlotsSchema.parse(formData);
+    const startDate = parseDateTime(data.blockedSlotStartDate, data.blockedSlotStartTime).toISO();
+    const endDate = parseDateTime(data.blockedSlotEndDate, data.blockedSlotEndTime).toISO();
     if (!startDate || !endDate) {
         throw new Error('Error parsing dates');
     }
@@ -40,8 +40,8 @@ function parseDateTime(dateString: string, timeString: z.infer<typeof timeFormat
 export const action = async ({ request, params }: DataFunctionArgs) => {
     try {
         const user = await requireManagementPermissions(request);
-        const { data, startDate, endDate } = getBlockingFromFormData(await request.formData());
-        await prisma.blocking.create({
+        const { data, startDate, endDate } = getBlockedSlotFromFormData(await request.formData());
+        await prisma.blockedSlot.create({
             data: {
                 userId: user.id,
                 startDate,
@@ -60,15 +60,15 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
     }
 };
 
-const InstructorBlockingsPage = () => {
+const BlockedSlotsPage = () => {
     const actionData = useActionData();
     const formErrors = actionData?.formValidationErrors;
 
     return (
         <Modal open={true}>
-            <BlockingForm intent={'ADD'} errors={formErrors}></BlockingForm>
+            <BlockedSlotForm intent={'ADD'} errors={formErrors}></BlockedSlotForm>
         </Modal>
     );
 };
 
-export default InstructorBlockingsPage;
+export default BlockedSlotsPage;

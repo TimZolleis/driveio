@@ -82,7 +82,7 @@ export const loader = async ({ request }: DataFunctionArgs) => {
         .findUnique({ where: { userId: studentData.instructorId || undefined } })
         .then((result) => requireResult(result, errors.instructor.noInstructorData));
     //Let's get all the instructor's blocked slots
-    const blockedSlots = await prisma.blocking.findMany({
+    const blockedSlots = await prisma.blockedSlot.findMany({
         where: { userId: instructorData.userId },
     });
 

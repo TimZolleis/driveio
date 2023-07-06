@@ -1,4 +1,3 @@
-import { Blocking } from '.prisma/client';
 import { Form, Link } from '@remix-run/react';
 import {
     Card,
@@ -22,25 +21,26 @@ import {
 } from '~/components/ui/Select';
 import { Button, buttonVariants } from '~/components/ui/Button';
 import { DateTime } from 'luxon';
+import type { BlockedSlot } from '.prisma/client';
 
 type FormErrors = {
     [key: string]: string[];
 };
 
-export const BlockingForm = ({
-    blocking,
+export const BlockedSlotForm = ({
+    blockedSlot,
     errors,
     intent,
 }: {
-    blocking?: Blocking;
+    blockedSlot?: BlockedSlot;
     errors?: FormErrors;
     intent: 'ADD' | 'EDIT';
 }) => {
-    const startDate = blocking ? DateTime.fromISO(blocking.startDate) : undefined;
+    const startDate = blockedSlot ? DateTime.fromISO(blockedSlot.startDate) : undefined;
     const startTime = startDate
         ? `${startDate.toFormat('HH', {})}:${startDate.toFormat('mm')}`
         : undefined;
-    const endDate = blocking ? DateTime.fromISO(blocking.endDate) : undefined;
+    const endDate = blockedSlot ? DateTime.fromISO(blockedSlot.endDate) : undefined;
     const endTime = endDate ? `${endDate?.toFormat('HH')}:${endDate.toFormat('mm')}` : undefined;
 
     return (
@@ -67,7 +67,7 @@ export const BlockingForm = ({
                         <div className='flex flex-col space-y-1.5'>
                             <Label htmlFor='name'>Name (optional)</Label>
                             <Input
-                                defaultValue={blocking?.name || undefined}
+                                defaultValue={blockedSlot?.name || undefined}
                                 name={'name'}
                                 id='name'
                                 placeholder='Physiotherapie'
@@ -82,13 +82,13 @@ export const BlockingForm = ({
                             <div className={'flex items-start justify-between gap-2'}>
                                 <DatePicker
                                     defaultValue={startDate?.toJSDate()}
-                                    error={errors?.blockingStartDate[0]}
-                                    name={'blockingStartDate'}
+                                    error={errors?.blockedSlotStartDate[0]}
+                                    name={'blockedSlotStartDate'}
                                 />
                                 <Input
                                     defaultValue={startTime}
-                                    error={errors?.blockingStartTime[0]}
-                                    name={'blockingStartTime'}
+                                    error={errors?.blockedSlotStartTime[0]}
+                                    name={'blockedSlotStartTime'}
                                     placeholder={'08:00'}
                                 />
                             </div>
@@ -98,20 +98,20 @@ export const BlockingForm = ({
                             <div className={'flex items-start justify-between gap-2'}>
                                 <DatePicker
                                     defaultValue={endDate?.toJSDate()}
-                                    error={errors?.blockingEndDate[0]}
-                                    name={'blockingEndDate'}
+                                    error={errors?.blockedSlotEndDate[0]}
+                                    name={'blockedSlotEndDate'}
                                 />
                                 <Input
                                     defaultValue={endTime}
-                                    error={errors?.blockingEndTime[0]}
-                                    name={'blockingEndTime'}
+                                    error={errors?.blockedSlotEndTime[0]}
+                                    name={'blockedSlotEndTime'}
                                     placeholder={'08:00'}
                                 />
                             </div>
                         </div>
                         <div>
                             <Label htmlFor={'repeat'}>Wiederholen</Label>
-                            <Select defaultValue={blocking?.repeat || 'NEVER'} name={'repeat'}>
+                            <Select defaultValue={blockedSlot?.repeat || 'NEVER'} name={'repeat'}>
                                 <SelectTrigger>
                                     <SelectValue placeholder='Nie' />
                                 </SelectTrigger>
