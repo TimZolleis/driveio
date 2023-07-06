@@ -40,10 +40,18 @@ export const errors = {
     student: {
         noStudentData:
             'Die Einrichtung deines Kontos ist noch nicht abgeschlossen. Bis dahin können keine Fahrstunden gebucht werden. Bitte wende dich an deinen Fahrlehrer, um die Einrichtung abzuschließen.',
+        noInstructor: 'Du hast noch keinen zugewiesenen Fahrlehrer.',
     },
     instructor: {
         noInstructorData:
             'Das Konto deines Fahrlehrers ist noch nicht vollständig eingerichtet. Bitte wende dich an deinen Fahrlehrer, um ihn auf diesen Fehler hinzuweisen.',
+    },
+    slot: {
+        overbooked: 'Dieser Termin ist leider schon belegt. Bitte versuche einen anderen Termin.',
+    },
+    lesson: {
+        notFound: 'Diese Fahrstunde konnte nicht gefunden werden',
+        expired: 'Diese Fahrstunde liegt in der Vergangenheit',
     },
 };
 const zodErrorMap: z.ZodErrorMap = (issue, ctx) => {

@@ -7,3 +7,7 @@ export function requireParameter(parameter: string, parameters: Params) {
     }
     return value;
 }
+
+export function raise(error: string): never {
+    throw new Error(error);
+}

@@ -11,7 +11,7 @@ import { z, ZodError } from 'zod';
 import { errors } from '~/messages/errors';
 import { isInstructorData, isStudentData } from '~/utils/user/student-data';
 import { Separator } from '~/components/ui/Seperator';
-import { getAddressByCoordinates } from '~/utils/bing-maps';
+import { getLocationByCoordinates } from '~/utils/bing-maps';
 import { toastMessage } from '~/utils/flash/toast.server';
 import { InstructorDataForm } from '~/components/features/user/instructor/InstructorDataForm';
 import { timeFormatSchema } from '~/routes/_app.me.blocked-slots.add';
@@ -25,7 +25,7 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
     const data = await getUserData(user);
     const address =
         data && isStudentData(data, user)
-            ? await getAddressByCoordinates(data.pickupLat, data.pickupLng).then((res) => res.data)
+            ? await getLocationByCoordinates(data.pickupLat, data.pickupLng).then((res) => res.data)
             : undefined;
     return json({ data, user, instructors, address });
 };

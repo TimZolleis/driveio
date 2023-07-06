@@ -1,5 +1,7 @@
 import type { DataFunctionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
+import * as React from 'react';
+import { useState } from 'react';
 import { requireUser } from '~/utils/user/user.server';
 import { useLoaderData, useRouteError, useSearchParams } from '@remix-run/react';
 import { errors } from '~/messages/errors';
@@ -9,8 +11,7 @@ import { ErrorComponent } from '~/components/ui/ErrorComponent';
 import { PageHeader } from '~/components/ui/PageHeader';
 import { Label } from '~/components/ui/Label';
 import { Calendar } from '~/components/ui/Calendar';
-import { useState } from 'react';
-import { DateTime, Interval } from 'luxon';
+import { DateTime } from 'luxon';
 import {
     Select,
     SelectContent,
@@ -22,10 +23,24 @@ import {
 } from '~/components/ui/Select';
 import {
     filterBlockedSlots,
-    getAllAvailableSlots,
-} from '~/utils/booking/calculate-available-slots';
-import { getTimeFromISOString } from '~/utils/luxon/parse-hour-minute';
+    findAvailableSlots,
+} from '~/utils/booking/calculate-available-slots.server';
 import { AvailableLessonCard } from '~/components/features/booking/AvailableLessonCard';
+import { zfd } from 'zod-form-data';
+import { timeFormatSchema } from '~/routes/_app.me.blocked-slots.add';
+import { setTimeOnDate } from '~/utils/luxon/parse-hour-minute';
+import { getInstructor } from '~/utils/user/student-data';
+import { findLessons, requestLesson } from '~/utils/lesson/lesson.server';
+import { isSlotAvailable } from '~/utils/booking/verify-slot.server';
+import { z } from 'zod';
+
+async function checkRoutePermission(request: Request) {
+    const user = await requireUser(request);
+    if (user.role !== 'STUDENT') {
+        throw new Error(errors.user.noPermission);
+    }
+    return user;
+}
 
 function getParameters(request: Request) {
     const url = new URL(request.url);
@@ -48,6 +63,7 @@ function getParameters(request: Request) {
     return { requiresRedirect: false, date: DateTime.fromISO(date), duration };
 }
 
+//TODO: Maybe put in separate function and use defer
 export const loader = async ({ request }: DataFunctionArgs) => {
     const user = await requireUser(request);
     if (user.role !== 'STUDENT') {
@@ -65,13 +81,7 @@ export const loader = async ({ request }: DataFunctionArgs) => {
     const instructorData = await prisma.instructorData
         .findUnique({ where: { userId: studentData.instructorId || undefined } })
         .then((result) => requireResult(result, errors.instructor.noInstructorData));
-    //Get all possible slots based on working time of instructor
-    const slots = getAllAvailableSlots(
-        instructorData.workStartTime,
-        instructorData.workEndTime,
-        parseInt(parameters.duration)
-    );
-    //With all the possible slots, we can now subtract blocked times
+    //Let's get all the instructor's blocked slots
     const blockedSlots = await prisma.blocking.findMany({
         where: { userId: instructorData.userId },
     });
@@ -81,56 +91,57 @@ export const loader = async ({ request }: DataFunctionArgs) => {
         filterBlockedSlots(slot, parameters.date)
     );
     //After getting all the slots, we have to get all booked lessons for this day to prevent double-booking
-    const lessons = await prisma.drivingLesson.findMany({
-        where: {
-            instructorId: instructorData.userId,
-            start: {
-                gte: parameters.date.startOf('day').toISO() || undefined,
-                lt: parameters.date.startOf('day').plus({ days: 1 }).toISO() || undefined,
-            },
-        },
+    const lessons = await findLessons({
+        instructorId: instructorData.userId,
+        date: parameters.date,
     });
-    //TODO: Add logic to add waiting time to the first available slot after a lesson
-    //TODO: Foolproof and test filtering logic (especially with blocking)
-    //NOTE: This logic is still flawed, since it will remove too many lessons out of the grid. Revise logic and instead of removing, calculate lessons until the next boundary and start after the boundary has ended
-    //After getting blocked slots and lessons, we can filter them out of the available slots
-    const availableSlots = slots
-        //The first filter function will filter out blocked slots
-        .filter((slot) => {
-            return applicableBlockedSlots.some((blockedSlot) => {
-                const blockedSlotInterval = Interval.fromDateTimes(
-                    getTimeFromISOString(blockedSlot.startDate),
-                    getTimeFromISOString(blockedSlot.endDate)
-                );
-                const slotInterval = Interval.fromDateTimes(
-                    getTimeFromISOString(slot.start),
-                    getTimeFromISOString(slot.end)
-                );
-                return !slotInterval.overlaps(blockedSlotInterval);
-            });
-        })
-        //The second filter function will remove lessons
-        .filter((slot) => {
-            if (lessons.length < 1) {
-                return true;
-            }
-            return lessons.some((lesson) => {
-                const slotInterval = Interval.fromDateTimes(
-                    DateTime.fromISO(slot.start!),
-                    DateTime.fromISO(slot.end!)
-                );
-                const lessonInterval = Interval.fromDateTimes(
-                    DateTime.fromISO(lesson.start),
-                    DateTime.fromISO(lesson.end)
-                );
-                return slotInterval.overlaps(lessonInterval);
-            });
-        });
+    //Now we can find all available slots that we can offer to the student
+    const availableSlots = findAvailableSlots({
+        workStart: instructorData.workStartTime,
+        workEnd: instructorData.workEndTime,
+        slotDuration: parseInt(parameters.duration),
+        blockedSlots: applicableBlockedSlots,
+        bookedLessons: lessons,
+        waitingTimeAfterLesson: studentData.waitingTime,
+    });
     return json({ availableSlots });
 };
 
+const bookSlotSchema = zfd.formData({
+    slotStart: zfd.text(timeFormatSchema),
+    slotEnd: zfd.text(timeFormatSchema),
+    description: zfd.text(z.string().optional()),
+});
+export const action = async ({ request, params }: DataFunctionArgs) => {
+    console.log('Action called');
+    const user = await checkRoutePermission(request);
+    const parameters = getParameters(request);
+    const { slotStart, slotEnd, description } = bookSlotSchema.parse(await request.formData());
+    const slotStartDate = setTimeOnDate(slotStart, parameters.date);
+    const slotEndDate = setTimeOnDate(slotEnd, parameters.date);
+    const instructor = await getInstructor(user);
+    if (
+        !(await isSlotAvailable({
+            date: parameters.date,
+            start: slotStartDate,
+            end: slotEndDate,
+            instructorId: instructor.id,
+        }))
+    ) {
+        throw new Error(errors.slot.overbooked);
+    }
+    await requestLesson({
+        start: slotStartDate,
+        end: slotEndDate,
+        userId: user.id,
+        instructorId: instructor.id,
+        description,
+    });
+    return redirect('/');
+};
+
 const BookPage = () => {
-    const data = useLoaderData<typeof loader>();
+    const { availableSlots } = useLoaderData<typeof loader>();
     const [searchParams, setSearchParams] = useSearchParams();
     const date = searchParams.get('date');
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -195,9 +206,11 @@ const BookPage = () => {
                                 : 'Bitte wähle ein Datum aus'}
                         </p>
                     </div>
-                    <div className={'grid grid-cols-2 gap-2 mt-5 '}>
-                        {data.availableSlots.map((slot) => (
-                            <AvailableLessonCard key={slot.index} slot={slot} />
+                    <div className={'grid grid-cols-2 grid-flow-row-dense gap-2 mt-5 '}>
+                        {availableSlots.map((slot, index) => (
+                            <React.Fragment key={index}>
+                                <AvailableLessonCard slot={slot}></AvailableLessonCard>
+                            </React.Fragment>
                         ))}
                     </div>
                 </div>

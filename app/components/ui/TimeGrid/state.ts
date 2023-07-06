@@ -9,7 +9,6 @@ interface startDateTimeStore {
 
 export const useStartDateTimeStore = create<startDateTimeStore>((setState, getState, store) => ({
     startDateTime: DateTime.now(),
-
     increase: () => setState((state) => ({ startDateTime: state.startDateTime.plus({ week: 1 }) })),
     decrease: () =>
         setState((state) => ({ startDateTime: state.startDateTime.minus({ week: 1 }) })),

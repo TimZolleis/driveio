@@ -1,5 +1,5 @@
-import { DateTime, Interval } from 'luxon';
-import { useStartDateTimeStore } from '~/components/ui/TimeGrid/state';
+import type { DateTime } from 'luxon';
+import { Interval } from 'luxon';
 
 export const timeGridConfig = {
     startHour: 6,

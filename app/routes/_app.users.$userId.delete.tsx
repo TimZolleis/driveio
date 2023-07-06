@@ -4,7 +4,7 @@ import { requireParameter } from '~/utils/general-utils';
 import { requireResult } from '~/utils/db/require-result.server';
 import { requireManagementPermissions } from '~/utils/user/user.server';
 import { useLoaderData } from '@remix-run/react';
-import { AlertDialog } from '~/components/ui/AlertDialog';
+import { AlertModal } from '~/components/ui/AlertModal';
 import { CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
 import { getFullName } from '~/utils/hooks/user';
 
@@ -29,7 +29,7 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 const DeleteUserPage = () => {
     const { user } = useLoaderData<typeof loader>();
     return (
-        <AlertDialog show={true}>
+        <AlertModal show={true}>
             <CardHeader>
                 <CardTitle>Benutzer löschen</CardTitle>
                 <CardDescription>
@@ -38,7 +38,7 @@ const DeleteUserPage = () => {
                     wirklich gelöscht werden? Diese Aktion kann nicht rückgängig gemacht werden.
                 </CardDescription>
             </CardHeader>
-        </AlertDialog>
+        </AlertModal>
     );
 };
 export default DeleteUserPage;

@@ -107,6 +107,8 @@ model DrivingLesson {
   start        String
   end          String
   status       LessonStatus
+  cancelledBy  String?
+  cancelledAt  String?
   description  String?
 }
 

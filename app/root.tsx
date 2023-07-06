@@ -14,6 +14,7 @@ import stylesheet from '~/tailwind.css';
 import { getUser } from '~/utils/user/user.server';
 import { getToastMessage } from '~/utils/flash/toast.server';
 import { Toaster } from '~/components/ui/Toaster';
+import * as React from 'react';
 import { useEffect } from 'react';
 import { useToast } from '~/components/ui/use-toast';
 
