@@ -6,7 +6,7 @@ import { prisma } from '../../../prisma/db';
 
 export async function checkPassword(user: User, password: string) {
     if (!user.password) {
-        throw new Error('User has no password yet!');
+        throw new Error(errors.user.noPassword);
     }
     return pbkdf2.compare(password, user.password);
 }

@@ -17,7 +17,7 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
         where: {
             userId: user.id,
             start: {
-                gte: DateTime.now().startOf('day').toISO() ?? undefined,
+                gte: DateTime.now().startOf('week').toISO() ?? undefined,
             },
             status: 'REQUESTED' || 'CONFIRMED',
         },

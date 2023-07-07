@@ -9,6 +9,7 @@ import { z, ZodError } from 'zod';
 import { prisma } from '../../prisma/db';
 import { errors } from '~/messages/errors';
 import { checkPassword, setUser } from '~/utils/user/user.server';
+import { Label } from '~/components/ui/Label';
 
 const formDataSchema = zfd.formData({
     email: zfd.text(z.string({ required_error: errors.login.email.required })),
@@ -25,7 +26,6 @@ export const action = async ({ request }: DataFunctionArgs) => {
             return user;
         });
         if (!(await checkPassword(user, password))) {
-            console.log('Wrong PW');
             return json({ error: errors.login.password.invalid });
         }
         return redirect('/', {
@@ -69,7 +69,9 @@ const LoginPage = () => {
                     />
                     <Button>Anmelden</Button>
                 </Form>
-                <p>{data?.error}</p>
+                <Label variant={'description'} color={'destructive'} className={'mt-2'}>
+                    {data?.error}
+                </Label>
                 <div className={'text-center mt-2'}></div>
                 <Link
                     className={
