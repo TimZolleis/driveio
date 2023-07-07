@@ -9,24 +9,11 @@ import { z, ZodError } from 'zod';
 import { prisma } from '../../prisma/db';
 import { errors } from '~/messages/errors';
 import { checkPassword, setUser } from '~/utils/user/user.server';
-import { SerializedZodError } from '~/types/SerializedZodError';
 
 const formDataSchema = zfd.formData({
     email: zfd.text(z.string({ required_error: errors.login.email.required })),
     password: zfd.text(z.string({ required_error: errors.login.password.required })),
 });
-
-export function isZodError(
-    data?: ActionData,
-    error?: Error | SerializedZodError
-): error is SerializedZodError {
-    return !!data?.isZodError;
-}
-
-type ActionData = {
-    error?: SerializedZodError | Error;
-    isZodError?: boolean;
-};
 
 export const action = async ({ request }: DataFunctionArgs) => {
     try {
@@ -38,7 +25,8 @@ export const action = async ({ request }: DataFunctionArgs) => {
             return user;
         });
         if (!(await checkPassword(user, password))) {
-            throw new Error(errors.login.password.invalid);
+            console.log('Wrong PW');
+            return json({ error: errors.login.password.invalid });
         }
         return redirect('/', {
             headers: {
@@ -46,12 +34,19 @@ export const action = async ({ request }: DataFunctionArgs) => {
             },
         });
     } catch (error) {
-        return json({ error, isZodError: error instanceof ZodError });
+        if (error instanceof ZodError) {
+            return json({ formValidationErrors: error.formErrors.fieldErrors });
+        }
+        if (error instanceof Error) {
+            return json({ error: error.message });
+        }
+        return json({ error: errors.unknown });
     }
 };
 
 const LoginPage = () => {
-    const data = useActionData<ActionData>();
+    const data = useActionData();
+    const formValidationErrors = data?.formValidationErrors;
     return (
         <main className={'min-h-screen w-full'}>
             <div
@@ -61,8 +56,12 @@ const LoginPage = () => {
                     Bitte melde dich mit deinen Zugangsdaten an
                 </p>
                 <Form method={'post'} className={'grid max-w-md w-full mt-5 gap-2'}>
-                    <Input name={'email'} placeholder={'name@email.com'}></Input>
+                    <Input
+                        name={'email'}
+                        placeholder={'name@email.com'}
+                        error={formValidationErrors?.email}></Input>
                     <Password
+                        error={formValidationErrors?.password}
                         name={'password'}
                         revealable={false}
                         type={'password'}
@@ -70,15 +69,8 @@ const LoginPage = () => {
                     />
                     <Button>Anmelden</Button>
                 </Form>
-                <div className={'text-center mt-2'}>
-                    {isZodError(data, data?.error)
-                        ? data.error.issues.map((issue) => (
-                              <p className={'text-sm text-destructive'} key={issue.message}>
-                                  {issue.message}
-                              </p>
-                          ))
-                        : data?.error?.message}
-                </div>
+                <p>{data?.error}</p>
+                <div className={'text-center mt-2'}></div>
                 <Link
                     className={
                         'px-8 mt-5 text-center text-sm text-muted-foreground underline underline-offset-4'
