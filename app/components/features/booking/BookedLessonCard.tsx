@@ -56,7 +56,7 @@ export const BookedLessonCard = ({
 
     return (
         <>
-            <div className={'p-1 space-y-1'}>
+            <div className={'space-y-1'}>
                 <div className={'rounded-xl border max-w-sm relative p-3'}>
                     {lessonEnd < DateTime.now() && (
                         <div

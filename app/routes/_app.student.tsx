@@ -3,25 +3,34 @@ import { json } from '@remix-run/node';
 import { requireUser } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
 import { DateTime } from 'luxon';
-import { Outlet, useLoaderData } from '@remix-run/react';
+import { Outlet, useLoaderData, useSearchParams } from '@remix-run/react';
 import { Separator } from '~/components/ui/Seperator';
 import { BookedLessonCard } from '~/components/features/booking/BookedLessonCard';
 import { requireResult } from '~/utils/db/require-result.server';
-import { raise } from '~/utils/general-utils';
+import { getQuery, raise } from '~/utils/general-utils';
 import { errors } from '~/messages/errors';
 import { getLocationByCoordinates } from '~/utils/bing-maps';
+import type { LessonViewOption } from '~/components/features/booking/LessonViewOptions';
+import { LessonViewOptions } from '~/components/features/booking/LessonViewOptions';
+import { useEffect, useState } from 'react';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireUser(request);
+    const showExpired = getQuery(request, 'showExpiredLessons');
+
     const lessons = await prisma.drivingLesson.findMany({
         where: {
             userId: user.id,
             start: {
-                gte: DateTime.now().startOf('week').toISO() ?? undefined,
+                gte:
+                    DateTime.now()
+                        .startOf(showExpired ? 'week' : 'day')
+                        .toISO() ?? undefined,
             },
             status: 'REQUESTED' || 'CONFIRMED',
         },
     });
+
     const lessonsWithInstructor = await Promise.all(
         lessons.map(async (lesson) => {
             const instructor = await prisma.user
@@ -48,16 +57,41 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 const StudentIndexPage = () => {
     const { user, lessonsWithInstructor, studentData, pickupLocation } =
         useLoaderData<typeof loader>();
+    const [checkedOptions, setCheckedOptions] = useState<LessonViewOption[]>([]);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const changeChecked = (option: LessonViewOption, isChecked: boolean) => {
+        if (!isChecked) {
+            setCheckedOptions(checkedOptions.filter((checkedOption) => checkedOption !== option));
+        } else setCheckedOptions([...checkedOptions, option]);
+    };
+    useEffect(() => {
+        for (const [key] of searchParams.entries()) {
+            const isChecked = !!checkedOptions.find((checkedOption) => (checkedOption.value = key));
+            if (!isChecked) {
+                searchParams.delete(key);
+            }
+        }
+        checkedOptions.forEach((checkedOption) => {
+            searchParams.set(checkedOption.value, 'true');
+        });
+        setSearchParams(searchParams);
+    }, [checkedOptions]);
+
     return (
         <>
             <h3 className={'font-semibold text-2xl'}>Hallo, {user.firstName}!</h3>
             <Separator className={'my-2'} />
             <div>
-                <h4 className={'font-medium text-lg'}>Meine Fahrstunden</h4>
-                <p className={'text-muted-foreground text-sm'}>
-                    {DateTime.now().startOf('week').toLocaleString(DateTime.DATE_MED)} -{' '}
-                    {DateTime.now().endOf('week').toLocaleString(DateTime.DATE_MED)})
-                </p>
+                <div className={'flex items-center gap-5'}>
+                    <div>
+                        <h4 className={'font-medium text-lg'}>Meine Fahrstunden</h4>
+                        <p className={'text-muted-foreground text-sm'}>
+                            ({DateTime.now().startOf('week').toLocaleString(DateTime.DATE_MED)} -{' '}
+                            {DateTime.now().endOf('week').toLocaleString(DateTime.DATE_MED)})
+                        </p>
+                    </div>
+                    <LessonViewOptions checked={checkedOptions} setChecked={changeChecked} />
+                </div>
                 <div className={'grid gap-4 mt-4'}>
                     {lessonsWithInstructor
                         .sort((a, b) => a.lesson.start.localeCompare(b.lesson.start))
