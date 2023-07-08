@@ -3,7 +3,7 @@ import { json } from '@remix-run/node';
 import { requireUser } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
 import { DateTime } from 'luxon';
-import { Outlet, useLoaderData, useSearchParams } from '@remix-run/react';
+import { Link, Outlet, useLoaderData, useSearchParams } from '@remix-run/react';
 import { Separator } from '~/components/ui/Seperator';
 import { BookedLessonCard } from '~/components/features/booking/BookedLessonCard';
 import { requireResult } from '~/utils/db/require-result.server';
@@ -14,7 +14,9 @@ import type { LessonViewOption } from '~/components/features/booking/LessonViewO
 import { LessonViewOptions } from '~/components/features/booking/LessonViewOptions';
 import { useEffect, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/Alert';
-import { Terminal } from 'lucide-react';
+import { CircleBackslashIcon } from '@radix-ui/react-icons';
+import { buttonVariants } from '~/components/ui/Button';
+import { cn } from '~/utils/css';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireUser(request);
@@ -116,13 +118,16 @@ const StudentIndexPage = () => {
 
 const NoLessonCard = () => {
     return (
-        <div className={'py-4'}>
+        <div className={'py-4 max-w-xl w-full'}>
             <Alert>
-                <Terminal className='h-4 w-4' />
-                <AlertTitle>Heads up!</AlertTitle>
+                <CircleBackslashIcon className='h-4 w-4' />
+                <AlertTitle>Keine Fahrstunden gefunden</AlertTitle>
                 <AlertDescription>
-                    You can add components to your app using the cli.
+                    Du hast die nächsten zwei Wochen noch keine Fahrstunden gebucht.
                 </AlertDescription>
+                <Link to={'/book'} className={cn(buttonVariants(), 'mt-2')}>
+                    Fahrstunden buchen
+                </Link>
             </Alert>
         </div>
     );

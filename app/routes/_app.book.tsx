@@ -100,6 +100,8 @@ const bookSlotSchema = zfd.formData({
     slotEnd: zfd.text(timeFormatSchema),
     description: zfd.text(z.string().optional()),
 });
+
+//TODO: Integrate limit verification in action as well
 export const action = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireRole(request, ROLE.STUDENT);
     const parameters = await verifyParameters(request);
