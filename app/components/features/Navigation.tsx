@@ -1,6 +1,6 @@
-import { User } from '.prisma/client';
 import { useOptionalUser } from '~/utils/hooks/user';
 import { Link } from '@remix-run/react';
+import { UserMenu } from '~/components/features/user/UserMenu';
 
 export const Navigation = () => {
     const user = useOptionalUser();
@@ -14,9 +14,7 @@ export const Navigation = () => {
                     drive.io
                 </Link>
             </div>
-            <div>
-                <p>{`${user?.firstName} ${user?.lastName}`}</p>
-            </div>
+            {user && <UserMenu user={user}></UserMenu>}
         </nav>
     );
 };
