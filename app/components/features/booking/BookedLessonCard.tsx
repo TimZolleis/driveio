@@ -9,6 +9,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/Popover';
 import { useEffect, useState } from 'react';
 import { Link } from '@remix-run/react';
+import { LessonStatusBadge } from '~/components/features/lesson/LessonStatus';
+import { errors } from '~/messages/errors';
 
 interface EventData {
     summary: string;
@@ -38,6 +40,8 @@ export const BookedLessonCard = ({
     studentData: StudentData;
     pickupLocation: BingMapsResponse<BingMapsLocation>;
 }) => {
+    const lessonStart = DateTime.fromISO(lesson.start);
+    const lessonEnd = DateTime.fromISO(lesson.end);
     const toISOOptions = {
         suppressMilliseconds: true,
         format: 'basic',
@@ -45,37 +49,59 @@ export const BookedLessonCard = ({
     } as const;
     const eventData = {
         summary: `Fahrstunde mit ${instructor.firstName} ${instructor.lastName}`,
-        start: getSafeISOStringFromDateTime(DateTime.fromISO(lesson.start), toISOOptions),
-        end: getSafeISOStringFromDateTime(DateTime.fromISO(lesson.end), toISOOptions),
+        start: getSafeISOStringFromDateTime(lessonStart, toISOOptions),
+        end: getSafeISOStringFromDateTime(lessonEnd, toISOOptions),
         location: pickupLocation.resourceSets[0]?.resources[0]?.address.formattedAddress,
     };
 
     return (
-        <div className={'p-3 rounded-xl border max-w-sm'}>
-            <p className={'text-gray-400 text-sm'}>
-                {DateTime.fromISO(lesson.start).toFormat('DD')}
-            </p>
-            <div
-                className={
-                    'flex justify-between items-center font-bold text-primary text-2xl gap-2 '
-                }>
-                <p>{DateTime.fromISO(lesson.start).toFormat('HH:mm')}</p>
-                <div className={'flex w-full justify-between items-center'}>
-                    <Dot />
-                    <div className={'w-full h-[1px] bg-border'}></div>
-                    <Dot />
+        <>
+            <div className={'space-y-1'}>
+                <div className={'rounded-xl border max-w-sm relative p-3'}>
+                    {lessonEnd < DateTime.now() && (
+                        <div
+                            className={
+                                'w-full h-full bg-neutral-100/50 absolute rounded-xl top-0 left-0'
+                            }></div>
+                    )}
+
+                    <div className={'flex justify-between items-center'}>
+                        <p className={'text-gray-400 text-sm'}>{lessonStart.toFormat('DD')}</p>
+                        <LessonStatusBadge status={lesson.status}></LessonStatusBadge>
+                    </div>
+                    <div
+                        className={
+                            'flex justify-between items-center font-bold text-primary text-2xl gap-2 '
+                        }>
+                        <p>{lessonStart.toFormat('HH:mm')}</p>
+                        <div className={'flex w-full justify-between items-center'}>
+                            <Dot />
+                            <div className={'w-full h-[1px] bg-border'}></div>
+                            <Dot />
+                        </div>
+                        <p>{lessonEnd.toFormat('HH:mm')}</p>
+                    </div>
+                    {lessonEnd > DateTime.now() && (
+                        <>
+                            <div className={'py-2 flex justify-between'}>
+                                <AddToCalendar codeValue={generateIcalString(eventData)} />
+                                <Link
+                                    to={`cancel/${lesson.id}`}
+                                    className={buttonVariants({
+                                        size: 'sm',
+                                        variant: 'secondary',
+                                    })}>
+                                    Absagen
+                                </Link>
+                            </div>
+                        </>
+                    )}
                 </div>
-                <p>{DateTime.fromISO(lesson.end).toFormat('HH:mm')}</p>
+                {lessonEnd < DateTime.now() && (
+                    <p className={'text-xs text-muted-foreground'}>{errors.lesson.expired}</p>
+                )}
             </div>
-            <div className={'py-2 flex justify-between'}>
-                <AddToCalendar codeValue={generateIcalString(eventData)} />
-                <Link
-                    to={`cancel/${lesson.id}`}
-                    className={buttonVariants({ size: 'sm', variant: 'secondary' })}>
-                    Absagen
-                </Link>
-            </div>
-        </div>
+        </>
     );
 };
 

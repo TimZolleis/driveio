@@ -8,6 +8,10 @@ export function requireParameter(parameter: string, parameters: Params) {
     return value;
 }
 
+export function getQuery(request: Request, query: string) {
+    const url = new URL(request.url);
+    return url.searchParams.get(query);
+}
 export function raise(error: string): never {
     throw new Error(error);
 }

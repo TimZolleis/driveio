@@ -10,7 +10,7 @@ import {
     useLoaderData,
 } from '@remix-run/react';
 
-import stylesheet from '~/tailwind.css';
+import stylesheet from '~/tailwind-output.css';
 import { getUser } from '~/utils/user/user.server';
 import { getToastMessage } from '~/utils/flash/toast.server';
 import { Toaster } from '~/components/ui/Toaster';

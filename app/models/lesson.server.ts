@@ -1,7 +1,7 @@
 import type { DateTime } from 'luxon';
-import { prisma } from '../../../prisma/db';
 import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
 import { LessonStatus } from '@prisma/client';
+import { prisma } from '../../prisma/db';
 
 export async function findLessons({
     instructorId,
@@ -17,6 +17,20 @@ export async function findLessons({
                 gte: date.startOf('day').toISO() ?? undefined,
                 lt: date.startOf('day').plus({ days: 1 }).toISO() ?? undefined,
             },
+            status: 'REQUESTED' || 'CONFIRMED',
+        },
+    });
+}
+
+export async function findStudentLessons(studentId: string, date: DateTime) {
+    return prisma.drivingLesson.findMany({
+        where: {
+            userId: studentId,
+            start: {
+                gte: date.startOf('day').toISO() ?? undefined,
+                lt: date.startOf('day').plus({ day: 1 }).toISO() ?? undefined,
+            },
+            status: 'REQUESTED' || 'CONFIRMED',
         },
     });
 }

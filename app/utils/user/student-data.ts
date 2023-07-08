@@ -32,3 +32,10 @@ export async function getInstructor(user: User) {
         .findUnique({ where: { id: instructorId } })
         .then((result) => requireResult(result, errors.user.notFound));
 }
+
+export function verifyStudentData(studentData: StudentData) {
+    if (!studentData.instructorId) {
+        throw new Error(errors.student.noStudentData);
+    }
+    return studentData;
+}

@@ -24,6 +24,8 @@ export const errors = {
         notFound: 'Es konnte kein Benutzer gefunden werden',
         emailExists: 'Diese E-Mail existier bereits',
         noPermission: 'Du hast leider keine Berechtigung für diese Seite',
+        noPassword:
+            'Der Einrichtungsprozess dieses Benutzers ist noch nicht abgeschlossen. Bitte melde dich mit deinem Einladungscode an!',
     },
     registration: {
         password: {
@@ -48,6 +50,7 @@ export const errors = {
     },
     slot: {
         overbooked: 'Dieser Termin ist leider schon belegt. Bitte versuche einen anderen Termin.',
+        notAvailable: 'Dieser Termin ist leider nicht verfügbar.',
     },
     lesson: {
         notFound: 'Diese Fahrstunde konnte nicht gefunden werden',

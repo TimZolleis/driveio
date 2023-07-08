@@ -8,7 +8,7 @@ const labelVariants = cva('', {
         variant: {
             default:
                 'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
-            description: 'text-xs mt-2',
+            description: 'text-xs',
         },
         color: {
             default: 'text-muted-foreground',
