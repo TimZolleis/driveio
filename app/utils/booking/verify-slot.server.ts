@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { checkOverlap, filterBlockedSlots } from '~/utils/booking/calculate-available-slots.server';
 import { prisma } from '../../../prisma/db';
-import { findLessons } from '~/utils/lesson/lesson.server';
+import { findLessons } from '~/models/lesson.server';
 
 interface CheckSlotProps {
     date: DateTime;

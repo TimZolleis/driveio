@@ -1,0 +1,5 @@
+# Ignore artifacts
+public/build
+.idea
+.cache
+node_modules

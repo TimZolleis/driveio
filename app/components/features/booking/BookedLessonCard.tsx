@@ -97,7 +97,9 @@ export const BookedLessonCard = ({
                         </>
                     )}
                 </div>
-                <p className={'text-xs text-muted-foreground'}>{errors.lesson.expired}</p>
+                {lessonEnd < DateTime.now() && (
+                    <p className={'text-xs text-muted-foreground'}>{errors.lesson.expired}</p>
+                )}
             </div>
         </>
     );

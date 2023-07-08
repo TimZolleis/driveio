@@ -50,6 +50,7 @@ export const errors = {
     },
     slot: {
         overbooked: 'Dieser Termin ist leider schon belegt. Bitte versuche einen anderen Termin.',
+        notAvailable: 'Dieser Termin ist leider nicht verfügbar.',
     },
     lesson: {
         notFound: 'Diese Fahrstunde konnte nicht gefunden werden',

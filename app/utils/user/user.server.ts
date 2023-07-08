@@ -1,4 +1,4 @@
-import type { User } from '.prisma/client';
+import type { ROLE, User } from '.prisma/client';
 import pbkdf2 from 'pbkdf2-passworder';
 import { commitSession, getSession } from '~/utils/session/session.server';
 import { errors } from '~/messages/errors';
@@ -34,6 +34,14 @@ export async function requireManagementPermissions(request: Request) {
     const user = await requireUser(request);
     if (user.role === 'STUDENT') {
         throw new Error('Insufficient Permissions');
+    }
+    return user;
+}
+
+export async function requireRole(request: Request, role: ROLE) {
+    const user = await requireUser(request);
+    if (user.role !== role) {
+        throw new Error(errors.user.noPermission);
     }
     return user;
 }

@@ -13,6 +13,8 @@ import { getLocationByCoordinates } from '~/utils/bing-maps';
 import type { LessonViewOption } from '~/components/features/booking/LessonViewOptions';
 import { LessonViewOptions } from '~/components/features/booking/LessonViewOptions';
 import { useEffect, useState } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '~/components/ui/Alert';
+import { Terminal } from 'lucide-react';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireUser(request);
@@ -92,6 +94,7 @@ const StudentIndexPage = () => {
                     </div>
                     <LessonViewOptions checked={checkedOptions} setChecked={changeChecked} />
                 </div>
+                {lessonsWithInstructor.length < 1 && <NoLessonCard />}
                 <div className={'grid gap-4 mt-4'}>
                     {lessonsWithInstructor
                         .sort((a, b) => a.lesson.start.localeCompare(b.lesson.start))
@@ -108,6 +111,20 @@ const StudentIndexPage = () => {
             </div>
             <Outlet />
         </>
+    );
+};
+
+const NoLessonCard = () => {
+    return (
+        <div className={'py-4'}>
+            <Alert>
+                <Terminal className='h-4 w-4' />
+                <AlertTitle>Heads up!</AlertTitle>
+                <AlertDescription>
+                    You can add components to your app using the cli.
+                </AlertDescription>
+            </Alert>
+        </div>
     );
 };
 
