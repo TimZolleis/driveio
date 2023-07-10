@@ -32,6 +32,7 @@ model User {
   instructorData  InstructorData?
   managementData  ManagementData?
   blockedSlots    BlockedSlot[]
+  lessons         DrivingLesson[]
 }
 
 model StudentData {
@@ -106,6 +107,7 @@ enum ROLE {
 model DrivingLesson {
   id           String       @id @default(uuid())
   userId       String
+  student      User         @relation(fields: [userId], references: [id])
   instructorId String
   start        String
   end          String

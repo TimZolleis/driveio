@@ -1,5 +1,5 @@
 import type { DateTime } from 'luxon';
-import { calculateTotalLessonDuration } from '~/utils/lesson/calculate-total-lesson-duration';
+import { calculateTotalDrivingTime } from '~/utils/lesson/lesson-utils';
 import type { DrivingLesson, InstructorData } from '.prisma/client';
 
 export function checkInstructorLimits(
@@ -7,7 +7,7 @@ export function checkInstructorLimits(
     lessons: DrivingLesson[],
     date: DateTime
 ) {
-    const duration = calculateTotalLessonDuration(lessons);
+    const duration = calculateTotalDrivingTime(lessons);
     return {
         instructorLimitExceeded: duration > instructorData.dailyDrivingMinutes,
         instructorMinutesRemaining: instructorData.dailyDrivingMinutes - duration,

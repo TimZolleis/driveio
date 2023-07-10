@@ -8,6 +8,7 @@ import {
     Scripts,
     ScrollRestoration,
     useLoaderData,
+    useRouteError,
 } from '@remix-run/react';
 
 import stylesheet from '~/tailwind-output.css';
@@ -17,6 +18,7 @@ import { Toaster } from '~/components/ui/Toaster';
 import * as React from 'react';
 import { useEffect } from 'react';
 import { useToast } from '~/components/ui/use-toast';
+import { ErrorComponent } from '~/components/ui/ErrorComponent';
 
 export const links: LinksFunction = () => [{ rel: 'stylesheet', href: stylesheet }];
 
