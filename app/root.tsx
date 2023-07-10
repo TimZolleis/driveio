@@ -1,5 +1,5 @@
 import type { DataFunctionArgs, LinksFunction } from '@remix-run/node';
-import { json } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import {
     Links,
     LiveReload,
@@ -22,6 +22,19 @@ export const links: LinksFunction = () => [{ rel: 'stylesheet', href: stylesheet
 
 export const loader = async ({ request }: DataFunctionArgs) => {
     const user = await getUser(request);
+    if (!user) {
+        if (request.url.includes('login')) {
+            const { header, toastMessage } = await getToastMessage(request);
+            return json({ user, toastMessage }, { headers: { 'Set-Cookie': header } });
+        }
+        if (request.url.includes('register')) {
+            const { header, toastMessage } = await getToastMessage(request);
+            return json({ user, toastMessage }, { headers: { 'Set-Cookie': header } });
+        } else {
+            return redirect('/login');
+        }
+    }
+
     const { header, toastMessage } = await getToastMessage(request);
     return json({ user, toastMessage }, { headers: { 'Set-Cookie': header } });
 };

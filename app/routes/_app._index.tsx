@@ -1,6 +1,6 @@
 import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
-import { getUser } from '~/utils/user/user.server';
+import { checkIfUserSetupComplete, getUser, requireUser } from '~/utils/user/user.server';
 import { Outlet, useLoaderData } from '@remix-run/react';
 
 export const meta: V2_MetaFunction = () => {
@@ -9,8 +9,21 @@ export const meta: V2_MetaFunction = () => {
 
 export const loader = async ({ request }: DataFunctionArgs) => {
     const user = await getUser(request);
-    if (user?.role === 'STUDENT') {
+    if (!user) {
+        return redirect('/login');
+    }
+
+    const isSetupComplete = await checkIfUserSetupComplete(user);
+    if (!isSetupComplete) {
+        return redirect('/me/setup');
+    }
+
+    //Then we redirect based on role
+    if (user.role === 'STUDENT') {
         return redirect('/student');
+    }
+    if (user.role === 'INSTRUCTOR') {
+        return redirect('/instructor');
     }
 
     return json({ user });

@@ -46,6 +46,27 @@ export async function requireRole(request: Request, role: ROLE) {
     return user;
 }
 
+export async function checkIfUserSetupComplete(user: User) {
+    switch (user.role) {
+        case 'INSTRUCTOR': {
+            const instructorData = await prisma.instructorData.findUnique({
+                where: { userId: user.id },
+            });
+            return !!instructorData;
+        }
+        case 'STUDENT': {
+            const studentData = await prisma.studentData.findUnique({ where: { userId: user.id } });
+            return !!studentData;
+        }
+        case 'MANAGEMENT': {
+            const managementData = await prisma.managementData.findUnique({
+                where: { userId: user.id },
+            });
+            return !!managementData;
+        }
+    }
+}
+
 export async function getUserData(user: User) {
     return user.role === 'INSTRUCTOR'
         ? prisma.instructorData.findUnique({ where: { userId: user.id } })

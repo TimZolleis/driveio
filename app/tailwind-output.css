@@ -458,6 +458,7 @@ video {
 
 body {
   background-color: hsl(var(--background));
+  font-family: Inter, sans-serif;
   color: hsl(var(--foreground));
   font-feature-settings: "rlig" 1, "calt" 1;
 }
@@ -876,6 +877,10 @@ body {
   width: 1rem;
 }
 
+.w-56 {
+  width: 14rem;
+}
+
 .w-60 {
   width: 15rem;
 }
@@ -1201,6 +1206,10 @@ body {
   border-color: hsl(var(--border));
 }
 
+.border-card {
+  border-color: hsl(var(--card));
+}
+
 .border-destructive {
   border-color: hsl(var(--destructive));
 }
@@ -1462,10 +1471,6 @@ body {
 
 .align-middle {
   vertical-align: middle;
-}
-
-.font-inter {
-  font-family: Inter, sans-serif;
 }
 
 .text-2xl {

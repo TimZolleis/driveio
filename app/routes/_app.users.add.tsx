@@ -1,21 +1,23 @@
-import { DataFunctionArgs, json, redirect } from '@remix-run/node';
+import type { DataFunctionArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { zfd } from 'zod-form-data';
-import { ZodError } from 'zod';
+import { z, ZodError } from 'zod';
 import { requireManagementPermissions } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
 import { Prisma, ROLE } from '.prisma/client';
 import { errors } from '~/messages/errors';
 import { Modal } from '~/components/ui/Modal';
-import { useState } from 'react';
-import { Card, CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
+import { Card, CardDescription, CardTitle } from '~/components/ui/Card';
 import { AddUserForm } from '~/components/features/user/AddUserForm';
 import { useNavigate } from 'react-router';
+import { useActionData } from '@remix-run/react';
+import type { ValidationErrors } from '~/types/general-types';
 
 const addUserFormSchema = zfd.formData({
     firstName: zfd.text(),
     lastName: zfd.text(),
     email: zfd.text(),
-    role: zfd.text(),
+    role: zfd.text(z.enum(['INSTRUCTOR', 'MANAGEMENT', 'STUDENT'])),
 });
 
 export type AddUserActionData = {
@@ -34,18 +36,12 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
     try {
         const user = await requireManagementPermissions(request);
         const formData = addUserFormSchema.parse(await request.formData());
-        const role =
-            formData.role === 'instructor'
-                ? ROLE.INSTRUCTOR
-                : formData.role === 'management'
-                ? ROLE.MANAGEMENT
-                : ROLE.STUDENT;
         const registeredUser = await prisma.user.create({
             data: {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 email: formData.email,
-                role,
+                role: formData.role,
                 admin: false,
                 drivingSchoolId: user.drivingSchoolId,
             },
@@ -55,7 +51,7 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
         return redirect(`/users/${registeredUser.id}/data`);
     } catch (error) {
         if (error instanceof ZodError) {
-            return json({ error, isZodError: true });
+            return json({ formValidationErrors: error.formErrors.fieldErrors });
         }
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
@@ -72,6 +68,8 @@ const AddUserPage = () => {
         navigate('/users');
     };
 
+    const validationErrors = useActionData<ValidationErrors>();
+
     return (
         <Modal open={true} onClose={onClose}>
             <Card className={'border-none shadow-none p-0'}>
@@ -82,7 +80,7 @@ const AddUserPage = () => {
                         Stammdaten erfolgt danach.
                     </CardDescription>
                 </div>
-                <AddUserForm className={'mt-5'} action={'/users/add'} />
+                <AddUserForm errors={validationErrors} className={'mt-5'} action={'/users/add'} />
             </Card>
         </Modal>
     );

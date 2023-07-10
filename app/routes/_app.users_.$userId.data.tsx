@@ -83,7 +83,6 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
             }
             case 'INSTRUCTOR': {
                 const data = instructorDataSchema.parse(formData);
-                console.log(data);
                 await prisma.instructorData.upsert({
                     where: { userId: user.id },
                     update: data,

@@ -24,6 +24,7 @@ model User {
   email           String          @unique
   role            ROLE
   admin           Boolean
+  setupComplete   Boolean         @default(false)
   registration    Registration?
   drivingSchool   DrivingSchool   @relation(fields: [drivingSchoolId], references: [id])
   drivingSchoolId String

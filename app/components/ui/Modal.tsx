@@ -44,11 +44,11 @@ export const Modal = ({
                                 leave='ease-in duration-200'
                                 leaveFrom='opacity-100 scale-100'
                                 leaveTo='opacity-0 scale-95'>
-                                <Dialog.Panel className='w-full max-w-lg lg:max-w-2xl transform rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all'>
+                                <Dialog.Panel className='w-full max-w-lg lg:max-w-2xl transform rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all border border-card'>
                                     {closable && (
                                         <div
                                             onClick={onClose}
-                                            className='absolute right-4 hover:cursor-pointer top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'>
+                                            className='absolute right-4 hover:cursor-pointer top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border'>
                                             <X className='h-4 w-4' />
                                             <span className='sr-only'>Close</span>
                                         </div>
