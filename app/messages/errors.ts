@@ -5,6 +5,7 @@ export const errors = {
     general: {
         required: 'Dieses Feld darf nicht leer sein',
         mismatch: 'Bitte gib ein gültiges Format ein',
+        paramsRequired: 'Diese Seite muss mit zusätzlichen Parametern aufgerufen werden.',
     },
     login: {
         email: {

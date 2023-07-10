@@ -8,7 +8,7 @@ import { Prisma, ROLE } from '.prisma/client';
 import { errors } from '~/messages/errors';
 import { Modal } from '~/components/ui/Modal';
 import { Card, CardDescription, CardTitle } from '~/components/ui/Card';
-import { AddUserForm } from '~/components/features/user/AddUserForm';
+import { GeneralUserDataForm } from '~/components/features/user/GeneralUserDataForm';
 import { useNavigate } from 'react-router';
 import { useActionData, useLoaderData } from '@remix-run/react';
 import type { ValidationErrors } from '~/types/general-types';

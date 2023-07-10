@@ -1,4 +1,4 @@
-import { Link, useFetcher } from '@remix-run/react';
+import { Form, Link } from '@remix-run/react';
 import { Input } from '~/components/ui/Input';
 import {
     Select,
@@ -8,43 +8,46 @@ import {
     SelectValue,
 } from '~/components/ui/Select';
 import { Button, buttonVariants } from '~/components/ui/Button';
-import type { AddUserActionData } from '~/routes/_app.users.add';
+import type { User } from '.prisma/client';
 import { ROLE } from '.prisma/client';
 import type { ValidationErrors } from '~/types/general-types';
 
-export const AddUserForm = ({
+export const GeneralUserDataForm = ({
+    user,
     action,
     className,
     errors,
 }: {
+    user?: User | null;
     action?: string;
     className?: string;
     errors?: ValidationErrors;
 }) => {
-    const fetcher = useFetcher<AddUserActionData>();
-    const data = fetcher.data;
     return (
-        <fetcher.Form method={'post'} action={action} className={className}>
+        <Form method={'post'} action={action} className={className}>
             <div className={'grid md:grid-cols-2 gap-3'}>
                 <Input
+                    defaultValue={user?.firstName}
                     required
                     name={'firstName'}
                     error={errors?.firstName[0]}
                     placeholder={'Max'}></Input>
                 <Input
+                    defaultValue={user?.lastName}
                     required
                     name={'lastName'}
                     error={errors?.lastName[0]}
                     placeholder={'Mustermann'}></Input>
                 <div>
                     <Input
+                        defaultValue={user?.email}
                         required
                         name={'email'}
                         error={errors?.email[0]}
                         placeholder={'max@mustermann.de'}></Input>
-                    <p className={'text-destructive text-sm p-1'}>{data?.error}</p>
+                    <p className={'text-destructive text-sm p-1'}>{errors?.error}</p>
                 </div>
-                <Select required name={'role'}>
+                <Select required name={'role'} defaultValue={user?.role}>
                     <SelectTrigger className='w-full'>
                         <SelectValue placeholder='Rolle' />
                     </SelectTrigger>
@@ -60,8 +63,8 @@ export const AddUserForm = ({
                 <Link className={buttonVariants({ variant: 'outline' })} to={'/users'}>
                     Abbruch
                 </Link>
-                <Button variant={'brand'}>Hinzufügen</Button>
+                <Button variant={'brand'}>Weiter</Button>
             </div>
-        </fetcher.Form>
+        </Form>
     );
 };

@@ -30,7 +30,7 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
     return json({ data, user, instructors, address });
 };
 
-const studentDataSchema = zfd.formData({
+export const studentDataSchema = zfd.formData({
     trainingBegin: zfd.text(z.string().optional()),
     trainingEnd: zfd.text(z.string().optional()),
     dateOfBirth: zfd.text(z.string({ required_error: errors.form.notEmpty })),
@@ -42,7 +42,7 @@ const studentDataSchema = zfd.formData({
     pickupLng: zfd.text(z.string().optional()),
 });
 
-const instructorDataSchema = zfd.formData({
+export const instructorDataSchema = zfd.formData({
     dailyDrivingMinutes: zfd.numeric(),
     maxDefaultLessons: zfd.numeric(),
     maxExtensiveLessons: zfd.numeric(),

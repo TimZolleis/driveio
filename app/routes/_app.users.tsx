@@ -1,4 +1,5 @@
-import { DataFunctionArgs, json } from '@remix-run/node';
+import type { DataFunctionArgs } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import { requireUser } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
 import { Link, Outlet, useLoaderData } from '@remix-run/react';
@@ -13,7 +14,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '~/components/ui/Dialog';
-import { AddUserForm } from '~/components/features/user/AddUserForm';
+import { GeneralUserDataForm } from '~/components/features/user/GeneralUserDataForm';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireUser(request);

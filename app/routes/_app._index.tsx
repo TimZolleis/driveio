@@ -22,8 +22,9 @@ export const loader = async ({ request }: DataFunctionArgs) => {
     if (user.role === 'STUDENT') {
         return redirect('/student');
     }
+    //TODO: Create seperate instructor page. For now we redirect to lesson overview
     if (user.role === 'INSTRUCTOR') {
-        return redirect('/instructor');
+        return redirect('/lessons');
     }
 
     return json({ user });
