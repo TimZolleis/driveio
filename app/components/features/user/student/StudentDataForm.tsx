@@ -17,6 +17,7 @@ import { AddressCombobox } from '~/components/ui/AddressCombobox';
 import { Separator } from '~/components/ui/Seperator';
 import type { BingMapsLocation } from '~/types/bing-maps-location';
 import { cn } from '~/utils/css';
+import { DateTime } from 'luxon';
 
 interface StudentDataFormProps {
     studentData?: StudentData;
@@ -38,13 +39,14 @@ export const StudentDataForm = ({
         <Form method={'post'}>
             <div className={'grid gap-2'}>
                 <Label>Geburtsdatum</Label>
-                <DatePicker
-                    defaultValue={
-                        studentData?.dateOfBirth ? new Date(studentData?.dateOfBirth) : undefined
-                    }
-                    required={true}
+                <Input
                     name={'dateOfBirth'}
-                />
+                    defaultValue={
+                        studentData?.dateOfBirth
+                            ? DateTime.fromISO(studentData?.dateOfBirth).toFormat('dd.MM.yyyy')
+                            : DateTime.now().toFormat('dd.MM.yyyy')
+                    }></Input>
+
                 <p className={'text-xs text-destructive'}>{errors?.dateOfBirth[0]}</p>
             </div>
             <div className={'py-3'}>
@@ -154,7 +156,9 @@ export const StudentDataForm = ({
                 <Link to={'/users'} className={buttonVariants({ variant: 'secondary' })}>
                     Abbrechen
                 </Link>
-                <Button variant={'brand'}>Speichern</Button>
+                <Button name={'intent'} value={'createUserData'} variant={'brand'}>
+                    Speichern
+                </Button>
             </div>
         </Form>
     );

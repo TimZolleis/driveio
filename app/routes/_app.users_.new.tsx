@@ -1,28 +1,47 @@
-import { useLoaderData, useSearchParams } from '@remix-run/react';
+import { Link, useLoaderData, useSearchParams } from '@remix-run/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
 import { cn } from '~/utils/css';
 import { GeneralUserDataForm } from '~/components/features/user/GeneralUserDataForm';
 import type { ActionArgs, DataFunctionArgs } from '@remix-run/node';
-import { namedAction } from 'remix-utils';
+import { json, redirect } from '@remix-run/node';
 import { zfd } from 'zod-form-data';
 import { z } from 'zod';
 import { handleActionError, raise } from '~/utils/general-utils';
 import { prisma } from '../../prisma/db';
 import { requireRole } from '~/utils/user/user.server';
 import { ROLE } from '.prisma/client';
-import { json, redirect } from '@remix-run/node';
 import { errors } from '~/messages/errors';
 import { findUser } from '~/models/user.server';
 import { requireResult } from '~/utils/db/require-result.server';
 import { instructorDataSchema, studentDataSchema } from '~/routes/_app.users_.$userId.data';
+import { StudentDataForm } from '~/components/features/user/student/StudentDataForm';
+import { getRandomCode } from '~/routes/_app.users.add';
+import { RegistrationCard } from '~/components/features/user/RegistrationCard';
+import { buttonVariants } from '~/components/ui/Button';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const instructor = await requireRole(request, ROLE.INSTRUCTOR);
     const url = new URL(request.url);
     const userId = url.searchParams.get('user');
-    const user = await findUser(userId ?? undefined);
+    const user = userId ? await findUser(userId) : undefined;
+    const availableInstructors = await prisma.user.findMany({
+        where: { drivingSchoolId: instructor.drivingSchoolId, role: 'INSTRUCTOR' },
+    });
+    const step = url.searchParams.get('step');
+    let registration = undefined;
+    if (step === '3' && user) {
+        const code = getRandomCode(6);
+        const userRegistration = await prisma.registration.findUnique({
+            where: {
+                userId: user.id,
+            },
+        });
+        registration =
+            userRegistration ??
+            (await prisma.registration.create({ data: { code, userId: user.id } }));
+    }
 
-    return json({ user, instructor });
+    return json({ user, instructor, availableInstructors, registration });
 };
 
 const createUserSchema = zfd.formData({
@@ -35,14 +54,15 @@ const createUserSchema = zfd.formData({
 export const action = async ({ request, params }: ActionArgs) => {
     const instructor = await requireRole(request, ROLE.INSTRUCTOR);
     const url = new URL(request.url);
-    // @ts-ignore
-    return namedAction(request, {
-        async createUser() {
-            try {
+    const formData = await request.formData();
+    const intent = formData.get('intent')?.toString();
+    try {
+        switch (intent) {
+            case 'createUser': {
                 const userId = url.searchParams.get('user');
-                const data = createUserSchema.parse(await request.formData());
+                const data = createUserSchema.parse(formData);
                 const user = await prisma.user.upsert({
-                    where: { id: userId || undefined },
+                    where: { id: userId || '' },
                     create: {
                         ...data,
                         admin: false,
@@ -56,23 +76,19 @@ export const action = async ({ request, params }: ActionArgs) => {
                 url.searchParams.set('role', user.role.toLowerCase());
                 url.searchParams.set('user', user.id);
                 return redirect(url.toString());
-            } catch (error) {
-                return handleActionError(error);
             }
-        },
+            case 'createUserData': {
+                const userId = url.searchParams.get('user');
+                const user = await findUser(userId ?? undefined).then((res) =>
+                    requireResult(res, errors.user.notFound)
+                );
+                const role =
+                    (url.searchParams.get('role')?.toUpperCase() as ROLE | undefined) ??
+                    raise(errors.general.paramsRequired);
 
-        async createUserData() {
-            const userId = url.searchParams.get('user');
-            const user = await findUser(userId ?? undefined).then((res) =>
-                requireResult(res, errors.user.notFound)
-            );
-            const role =
-                (url.searchParams.get('role')?.toUpperCase() as ROLE | undefined) ??
-                raise(errors.general.paramsRequired);
-            switch (role) {
-                case 'STUDENT': {
-                    try {
-                        const data = studentDataSchema.parse(await request.formData());
+                switch (role) {
+                    case 'STUDENT': {
+                        const data = studentDataSchema.parse(formData);
                         await prisma.studentData.upsert({
                             where: {
                                 userId: user.id,
@@ -91,13 +107,9 @@ export const action = async ({ request, params }: ActionArgs) => {
                         });
                         url.searchParams.set('step', '3');
                         return redirect(url.toString());
-                    } catch (error) {
-                        return handleActionError(error);
                     }
-                }
-                case 'INSTRUCTOR': {
-                    try {
-                        const data = instructorDataSchema.parse(await request.formData());
+                    case 'INSTRUCTOR': {
+                        const data = instructorDataSchema.parse(formData);
                         await prisma.instructorData.upsert({
                             where: { userId: user.id },
                             update: data,
@@ -105,18 +117,18 @@ export const action = async ({ request, params }: ActionArgs) => {
                         });
                         url.searchParams.set('step', '3');
                         return redirect(url.toString());
-                    } catch (error) {
-                        return handleActionError(error);
                     }
                 }
             }
-        },
-        async createRegistration() {},
-    });
+        }
+    } catch (error) {
+        console.log('Caught', error);
+        return handleActionError(error);
+    }
 };
 
 const AddUserLayout = () => {
-    const { user } = useLoaderData<typeof loader>();
+    const { user, availableInstructors, registration } = useLoaderData<typeof loader>();
     const [searchParams] = useSearchParams();
     const step = parseInt(searchParams.get('step') || '1');
     return (
@@ -137,9 +149,24 @@ const AddUserLayout = () => {
                             </CardHeader>
                             <CardContent>
                                 {step === 1 && (
-                                    <GeneralUserDataForm
-                                        user={user}
-                                        action={'?/createUser'}></GeneralUserDataForm>
+                                    <GeneralUserDataForm user={user}></GeneralUserDataForm>
+                                )}
+                                {step === 2 && (
+                                    <>
+                                        {user && user.role === ROLE.STUDENT && (
+                                            <StudentDataForm instructors={availableInstructors} />
+                                        )}
+                                    </>
+                                )}
+                                {step === 3 && registration && (
+                                    <>
+                                        <RegistrationCard registration={registration} />
+                                        <div className={'mt-2 flex justify-end'}>
+                                            <Link to={'/users'} className={buttonVariants()}>
+                                                Fertig
+                                            </Link>
+                                        </div>
+                                    </>
                                 )}
                             </CardContent>
                         </div>

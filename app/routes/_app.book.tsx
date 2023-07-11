@@ -154,12 +154,10 @@ const BookPage = () => {
 
     return (
         <div className={'w-full'}>
-            <div className={'w-full flex gap-5'}>
+            <div className={'w-full grid md:flex gap-5'}>
                 <div>
                     <PageHeader>Fahrstunden buchen</PageHeader>
-                    <p className={'text-muted-foreground'}>
-                        Buche hier Fahrstunden für die kommende Woche
-                    </p>
+
                     <p className={'text-xs text-muted-foreground'}>
                         Du kannst diese Woche noch{' '}
                         <span className={'font-semibold text-primary'}>
@@ -187,7 +185,7 @@ const BookPage = () => {
                     </Select>
                 </div>
             </div>
-            <div className={'flex gap-2 p-3'}>
+            <div className={'grid md:flex gap-2 md:p-3'}>
                 <Calendar
                     disabled={disabledDays.map((day) => DateTime.fromISO(day).toJSDate())}
                     fromMonth={DateTime.now().toJSDate()}

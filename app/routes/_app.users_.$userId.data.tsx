@@ -15,6 +15,8 @@ import { getLocationByCoordinates } from '~/utils/bing-maps';
 import { toastMessage } from '~/utils/flash/toast.server';
 import { InstructorDataForm } from '~/components/features/user/instructor/InstructorDataForm';
 import { timeFormatSchema } from '~/routes/_app.me.blocked-slots.add';
+import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
+import { DateTime } from 'luxon';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const userId = requireParameter('userId', params);
@@ -69,11 +71,17 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
                     where: { userId: user.id },
                     update: {
                         ...data,
+                        dateOfBirth: getSafeISOStringFromDateTime(
+                            DateTime.fromFormat(data.dateOfBirth, 'dd.MM.yyyy')
+                        ),
                         pickupLat: data.pickupLat ? parseFloat(data.pickupLat) : undefined,
                         pickupLng: data.pickupLng ? parseFloat(data.pickupLng) : undefined,
                     },
                     create: {
                         ...data,
+                        dateOfBirth: getSafeISOStringFromDateTime(
+                            DateTime.fromFormat(data.dateOfBirth, 'dd.MM.yyyy')
+                        ),
                         pickupLat: data.pickupLat ? parseFloat(data.pickupLat) : undefined,
                         pickupLng: data.pickupLng ? parseFloat(data.pickupLng) : undefined,
                         userId: user.id,

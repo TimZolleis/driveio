@@ -67,7 +67,7 @@ export const LessonOverview = ({
                         : parseViewModeToDateTime(viewMode).toLocaleString(DateTime.DATE_HUGE)}
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className={'px-3'}>
                 {viewMode === 'weekly' && (
                     <div className={'space-y-2'}>
                         {week

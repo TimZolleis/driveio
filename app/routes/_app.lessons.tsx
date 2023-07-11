@@ -47,7 +47,6 @@ const LessonPage = () => {
                     </TabsTrigger>
                 </TabsList>
             </Tabs>
-
             <Outlet />
         </main>
     );

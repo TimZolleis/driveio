@@ -101,8 +101,10 @@ const LessonOverviewPage = () => {
                     </CardContent>
                 </Card>
             </div>
-            <div className={'mt-4'}>
-                <LessonOverviewDaySelector></LessonOverviewDaySelector>
+            <div className={'sm:overflow-hidden rounded-md'}>
+                <div className={'mt-4 overflow-scroll md:overflow-hidden'}>
+                    <LessonOverviewDaySelector></LessonOverviewDaySelector>
+                </div>
             </div>
             <div className={'mt-4'}>
                 <LessonOverview lessons={activeLessons} viewMode={getViewMode(searchParams)} />

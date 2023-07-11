@@ -1,18 +1,11 @@
 import type { Registration } from '.prisma/client';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '~/components/ui/Card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
 import { Label } from '~/components/ui/Label';
 import { DateTime } from 'luxon';
 import { Form } from '@remix-run/react';
 import { Button } from '~/components/ui/Button';
 
-interface PendingRegistrationProps {
+export interface PendingRegistrationProps {
     registration: Omit<Registration, 'createdAt'> & { createdAt: string };
 }
 

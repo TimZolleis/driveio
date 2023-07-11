@@ -22,29 +22,35 @@ export const LessonCard = ({
     return (
         <div
             className={cn(
-                'flex items-center border rounded-md p-4 gap-4',
+                'md:flex items-center border rounded-md p-4 gap-4',
                 lesson.status === LessonStatus.DECLINED
                     ? 'bg-neutral-100 opacity-75'
                     : highlight
                     ? 'bg-red-100/30'
                     : 'bg-white'
             )}>
-            {overlaps && <AlertTriangle className={'text-red-500'}></AlertTriangle>}
-            <div className='space-y-1'>
-                <div className={'flex items-center gap-2'}>
-                    <p className={'text-sm font-medium leading-none'}>
-                        {lesson.student?.firstName} {lesson.student?.lastName}
-                    </p>
-                    <LessonStatusBadge status={lesson.status} />
+            {overlaps && <AlertTriangle className={'text-red-500 mb-2 md:mb-0'}></AlertTriangle>}
+            <div className={'flex justify-between w-full items-center'}>
+                <div className='space-y-1 text-left'>
+                    <div className={'flex flex-col-reverse md:flex-row md:items-center gap-2'}>
+                        <p className={'text-sm font-medium leading-none'}>
+                            {lesson.student?.firstName} {lesson.student?.lastName}
+                        </p>
+                        <LessonStatusBadge status={lesson.status} />
+                    </div>
+                    <p className='text-sm text-muted-foreground'>{lesson.student.email}</p>
                 </div>
-                <p className='text-sm text-muted-foreground'>{lesson.student.email}</p>
-            </div>
-            <div className={cn('ml-auto font-medium', overlaps ? 'text-red-500' : 'text-primary')}>
-                {lessonStart.toFormat('HH:mm')} - {lessonEnd.toFormat('HH:mm')}
+                <div
+                    className={cn(
+                        'ml-auto font-medium',
+                        overlaps ? 'text-red-500' : 'text-primary'
+                    )}>
+                    {lessonStart.toFormat('HH:mm')} - {lessonEnd.toFormat('HH:mm')}
+                </div>
             </div>
 
             {enablePlanning && (
-                <div className={'px-4'}>
+                <div className={'pt-4 px-0 md:px-4 md:py-0'}>
                     <LessonPlanningButtons lesson={lesson} />
                 </div>
             )}

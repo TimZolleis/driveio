@@ -63,7 +63,9 @@ export const GeneralUserDataForm = ({
                 <Link className={buttonVariants({ variant: 'outline' })} to={'/users'}>
                     Abbruch
                 </Link>
-                <Button variant={'brand'}>Weiter</Button>
+                <Button variant={'brand'} name={'intent'} value={'createUser'}>
+                    Weiter
+                </Button>
             </div>
         </Form>
     );

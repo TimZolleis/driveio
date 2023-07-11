@@ -1,22 +1,24 @@
-import { DataFunctionArgs, json, redirect } from '@remix-run/node';
+import type { DataFunctionArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { prisma } from '../../prisma/db';
 import { requireParameter } from '~/utils/general-utils';
 import { requireResult } from '~/utils/db/require-result.server';
-import { requireManagementPermissions } from '~/utils/user/user.server';
+import { requireManagementPermissions, requireRole } from '~/utils/user/user.server';
 import { useLoaderData } from '@remix-run/react';
 import { AlertModal } from '~/components/ui/AlertModal';
 import { CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
 import { getFullName } from '~/utils/hooks/user';
+import { ROLE } from '.prisma/client';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
-    const managementUser = await requireManagementPermissions(request);
+    const instructor = await requireRole(request, ROLE.INSTRUCTOR);
     const userId = requireParameter('userId', params);
     const user = await prisma.user.findUnique({ where: { id: userId } }).then(requireResult);
     return json({ user });
 };
 
 export const action = async ({ request, params }: DataFunctionArgs) => {
-    const managementUser = await requireManagementPermissions(request);
+    const instructor = await requireRole(request, ROLE.INSTRUCTOR);
     const userId = requireParameter('userId', params);
     const formData = await request.formData();
     const intent = formData.get('intent')?.toString();

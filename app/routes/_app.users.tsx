@@ -6,15 +6,6 @@ import { Link, Outlet, useLoaderData } from '@remix-run/react';
 import { PageHeader } from '~/components/ui/PageHeader';
 import { buttonVariants } from '~/components/ui/Button';
 import { UserTable } from '~/components/features/user/UserTable';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '~/components/ui/Dialog';
-import { GeneralUserDataForm } from '~/components/features/user/GeneralUserDataForm';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireUser(request);
