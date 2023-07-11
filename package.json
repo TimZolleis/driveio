@@ -2,7 +2,8 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "remix build",
+    "build": "prisma generate && npm run build:css && remix build",
+    "build:css":  "tailwindcss -m -i app/tailwind.css -o app/tailwind-output.css",
     "dev": "concurrently \"npm run dev:css\" \"remix dev\"",
     "dev:css": "tailwindcss -w -i app/tailwind.css -o app/tailwind-output.css",
     "typecheck": "tsc"
