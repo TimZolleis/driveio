@@ -3,3 +3,5 @@ public/build
 .idea
 .cache
 node_modules
+app/tailwind-output.css
+app/tailwind.css

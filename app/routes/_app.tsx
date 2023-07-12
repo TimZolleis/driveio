@@ -1,12 +1,31 @@
 import { AppLayout } from '~/components/features/AppLayout';
-import { Outlet, useRouteError } from '@remix-run/react';
+import { Outlet, useLoaderData, useRouteError } from '@remix-run/react';
 import { ErrorComponent } from '~/components/ui/ErrorComponent';
 import * as React from 'react';
+import { getUser } from '~/utils/user/user.server';
+import type { DataFunctionArgs } from '@remix-run/node';
+import { json } from '@remix-run/node';
+import { ROLE } from '.prisma/client';
+import { InstructorLayout } from '~/components/features/InstructorLayout';
+
+export const loader = async ({ request }: DataFunctionArgs) => {
+    const user = await getUser(request);
+    return json({ user });
+};
 
 const AppLayoutPage = () => {
+    const { user } = useLoaderData<typeof loader>();
     return (
         <AppLayout>
-            <Outlet />
+            {user && user.role === ROLE.INSTRUCTOR ? (
+                <InstructorLayout user={user}>
+                    <Outlet />
+                </InstructorLayout>
+            ) : (
+                <div className={'py-5'}>
+                    <Outlet />
+                </div>
+            )}
         </AppLayout>
     );
 };
