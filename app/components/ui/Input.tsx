@@ -2,8 +2,11 @@ import * as React from 'react';
 import { cn } from '~/utils/css';
 import { cva } from 'class-variance-authority';
 import { Label } from '~/components/ui/Label';
+import type { useDebounceFetcher } from '~/utils/form/debounce-fetcher';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    autosave?: boolean;
+    fetcher?: ReturnType<any>;
     error?: string;
 }
 
@@ -12,13 +15,30 @@ export const inputVariants = cva(
 );
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-    ({ className, type, error, ...props }, ref) => {
+    ({ className, type, error, autosave, fetcher, ...props }, ref) => {
         return (
             <div>
                 <input
                     type={type}
                     className={cn(inputVariants({}), className)}
                     ref={ref}
+                    onChange={(event) => {
+                        if (autosave) {
+                            fetcher?.debounceSubmit(event.currentTarget.form, {
+                                replace: true,
+                                debounceTimeout: 500,
+                            });
+                        }
+                        props.onChange?.(event);
+                    }}
+                    onBlur={(event) => {
+                        if (autosave) {
+                            fetcher?.debounceSubmit(event.currentTarget.form, {
+                                replace: true,
+                            });
+                        }
+                        props.onBlur?.(event);
+                    }}
                     {...props}
                 />
                 <Label variant={'description'} color={'destructive'}>

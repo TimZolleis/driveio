@@ -11,6 +11,10 @@ export async function toastMessage(request: Request, { title, description }: Toa
     return commitSession(session);
 }
 
+export function toastErrorMessage(request: Request, { errorMessage }: { errorMessage: string }) {
+    return toastMessage(request, { title: 'Fehler', description: errorMessage });
+}
+
 export async function getToastMessage(request: Request) {
     const session = await getSession(request);
     const toastMessage = session.get('toast') as Toast | undefined;

@@ -1,6 +1,8 @@
 import type { Session } from '@remix-run/node';
-import { createCookieSessionStorage } from '@remix-run/node';
+import { createCookieSessionStorage, redirect } from '@remix-run/node';
 import { env } from '~/utils/env/env';
+import { toastErrorMessage } from '~/utils/flash/toast.server';
+import { getUser } from '~/utils/user/user.server';
 
 const {
     getSession: getCookieSession,
@@ -18,6 +20,22 @@ const {
 
 export async function getSession(request: Request) {
     return getCookieSession(request.headers.get('Cookie'));
+}
+
+export async function assertAuthSession(
+    request: Request,
+    { onFailRedirectTo }: { onFailRedirectTo?: string }
+) {
+    const user = await getUser(request);
+    if (!user) {
+        throw redirect(onFailRedirectTo || '/login', {
+            headers: {
+                'Set-Cookie': await toastErrorMessage(request, {
+                    errorMessage: 'no-user-session',
+                }),
+            },
+        });
+    }
 }
 
 export async function commitSession(session: Session) {

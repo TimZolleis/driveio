@@ -1,52 +1,75 @@
 import { Input } from '~/components/ui/Input';
 import { Password } from '~/components/ui/Password';
 import { Button } from '~/components/ui/Button';
-import { Form, Link, useActionData } from '@remix-run/react';
+import { Form, Link, useActionData, useNavigation } from '@remix-run/react';
 import type { DataFunctionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { zfd } from 'zod-form-data';
-import { z, ZodError } from 'zod';
-import { prisma } from '../../prisma/db';
+import { z } from 'zod';
 import { errors } from '~/messages/errors';
-import { checkPassword, setUser } from '~/utils/user/user.server';
+import { checkPassword, getUser, setUser } from '~/utils/user/user.server';
 import { Label } from '~/components/ui/Label';
+import { useDebounceFetcher } from '~/utils/form/debounce-fetcher';
+import { getQuery, handleActionError, raise } from '~/utils/general-utils';
+import { findUserByEmail } from '~/models/user.server';
+import { commitSession, getSession } from '~/utils/session/session.server';
+import { Loader } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const formDataSchema = zfd.formData({
-    email: zfd.text(z.string({ required_error: errors.login.email.required })),
+const loginSchema = zfd.formData({
     password: zfd.text(z.string({ required_error: errors.login.password.required })),
 });
 
-export const action = async ({ request }: DataFunctionArgs) => {
-    try {
-        const { email, password } = formDataSchema.parse(await request.formData());
-        const user = await prisma.user.findUnique({ where: { email: email } }).then((user) => {
-            if (!user) {
-                throw new Error(errors.login.email.invalid);
-            }
-            return user;
-        });
-        if (!(await checkPassword(user, password))) {
-            return json({ error: errors.login.password.invalid });
+export const loader = async ({ request }: DataFunctionArgs) => {
+    const user = await getUser(request);
+    if (user) {
+        return redirect('/');
+    }
+    const email = getQuery(request, 'email');
+    const foundUser = email ? await findUserByEmail(email) : undefined;
+    const session = await getSession(request);
+    if (email) {
+        session.flash('loginEmail', email);
+    }
+
+    return json(
+        { isValidUser: !!foundUser },
+        {
+            headers: {
+                'Set-Cookie': await commitSession(session),
+            },
         }
+    );
+};
+
+export const action = async ({ request }: DataFunctionArgs) => {
+    const formData = await request.formData();
+    try {
+        const session = await getSession(request);
+        const email = session.get('loginEmail') ?? raise(errors.login.email.required);
+        const { password } = loginSchema.parse(formData);
+        const user = (await findUserByEmail(email)) ?? raise(errors.login.email.invalid);
+        const isValidPassword = await checkPassword(user, password);
+        if (!isValidPassword) {
+            throw new Error(errors.login.password.invalid);
+        }
+
         return redirect('/', {
             headers: {
                 'Set-Cookie': await setUser(request, user),
             },
         });
     } catch (error) {
-        if (error instanceof ZodError) {
-            return json({ formValidationErrors: error.formErrors.fieldErrors });
-        }
-        if (error instanceof Error) {
-            return json({ error: error.message });
-        }
-        return json({ error: errors.unknown });
+        return handleActionError(error);
     }
 };
 
 const LoginPage = () => {
+    const fetcher = useDebounceFetcher<typeof loader>();
+    const isValidUser = fetcher.data?.isValidUser;
     const data = useActionData();
     const formValidationErrors = data?.formValidationErrors;
+    const navigation = useNavigation();
     return (
         <main className={'min-h-screen w-full'}>
             <div
@@ -55,20 +78,31 @@ const LoginPage = () => {
                 <p className={'text-sm text-muted-foreground'}>
                     Bitte melde dich mit deinen Zugangsdaten an
                 </p>
-                <Form method={'post'} className={'grid max-w-md w-full mt-5 gap-2'}>
+                <fetcher.Form method={'get'} className={'grid max-w-md w-full mt-5 gap-2'}>
+                    <Label>Email</Label>
                     <Input
+                        fetcher={fetcher}
+                        autosave={true}
                         name={'email'}
                         placeholder={'name@email.com'}
                         error={formValidationErrors?.email}></Input>
-                    <Password
-                        error={formValidationErrors?.password}
-                        name={'password'}
-                        revealable={false}
-                        type={'password'}
-                        placeholder={'*********'}
-                    />
-                    <Button>Anmelden</Button>
-                </Form>
+                    {!isValidUser && (
+                        <Button isLoading={fetcher.state === 'submitting'}>Weiter</Button>
+                    )}
+                </fetcher.Form>
+                {isValidUser && (
+                    <Form method={'post'} className={'grid max-w-md w-full mt-5 gap-2'}>
+                        <Label>Passwort</Label>
+                        <Password
+                            error={formValidationErrors?.password}
+                            name={'password'}
+                            revealable={false}
+                            type={'password'}
+                            placeholder={'*********'}
+                        />
+                        <Button isLoading={navigation.state !== 'idle'}>Anmelden</Button>
+                    </Form>
+                )}
                 <Label variant={'description'} color={'destructive'} className={'mt-2'}>
                     {data?.error}
                 </Label>
