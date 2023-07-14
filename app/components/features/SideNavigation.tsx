@@ -21,6 +21,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
                     item.show && (
                         <NavLink
                             key={item.href}
+                            end={true}
                             to={item.href}
                             className={(active) =>
                                 cn(

@@ -11,9 +11,45 @@ datasource db {
 }
 
 model DrivingSchool {
-  id    String @id @default(uuid())
-  name  String
-  users User[]
+  id               String @id @default(uuid())
+  name             String
+  contactFirstName String
+  contactLastName  String
+  contactEmail     String
+  contactPhone     String
+  address          String
+
+  description    String?
+  users          User[]
+  licenseClasses LicenseClass[]
+  lessonTypes    LessonType[]
+}
+
+model LicenseClass {
+  id              String                   @id @default(uuid())
+  drivingSchoolId String
+  drivingSchool   DrivingSchool            @relation(fields: [drivingSchoolId], references: [id])
+  name            String                   @unique
+  lessonTypes     LessonTypeLicenseClass[]
+}
+
+model LessonType {
+  id              String                   @id @default(uuid())
+  drivingSchoolId String
+  drivingSchool   DrivingSchool            @relation(fields: [drivingSchoolId], references: [id])
+  name            String
+  color           String
+  licenseClasses  LessonTypeLicenseClass[]
+}
+
+model LessonTypeLicenseClass {
+  licenseClassId String
+  licenseClass   LicenseClass @relation(fields: [licenseClassId], references: [id])
+  lessonTypeId   String
+  lessonType     LessonType   @relation(fields: [lessonTypeId], references: [id])
+  minimumDrives  Int
+
+  @@id([licenseClassId, lessonTypeId])
 }
 
 model Image {

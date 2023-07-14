@@ -6,8 +6,8 @@ import { Separator } from '~/components/ui/Seperator';
 
 export const InstructorLayout = ({ user, children }: { user?: User; children: ReactNode }) => {
     return (
-        <main className={'flex font-medium text-sm'}>
-            <div className={'border-r w-full max-w-[275px] py-10 px-3'}>
+        <main className={'flex'}>
+            <div className={'border-r w-full max-w-[275px] py-10 px-3 font-medium text-sm'}>
                 <SideBarLink to={'/lessons'} icon={<List className={'w-4 h-4'} />}>
                     Fahrstunden
                 </SideBarLink>
