@@ -1,4 +1,4 @@
-import type { ToISOTimeOptions } from 'luxon';
+import type { ToISODateOptions, ToISOTimeOptions } from 'luxon';
 import { DateTime } from 'luxon';
 import { raise } from '~/utils/general-utils';
 
@@ -24,4 +24,8 @@ export function getTimeFromISOString(date: string | null, dateToSetTo?: DateTime
 
 export function getSafeISOStringFromDateTime(dateTime: DateTime, options?: ToISOTimeOptions) {
     return dateTime.toISO(options) ?? raise('Error parsing DateTime to ISO');
+}
+
+export function getSafeISODate(dateTime: DateTime, options?: ToISODateOptions) {
+    return dateTime.toISODate(options) ?? raise('Error parsing DateTime to ISO Date');
 }

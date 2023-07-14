@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon';
+import { DateTime, Interval } from 'luxon';
 
 export function useHourRange(startHour: number, endHour: number) {
     const hours = Array.from({ length: endHour - startHour + 1 }, (_, index) => startHour + index);

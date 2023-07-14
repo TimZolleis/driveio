@@ -1,6 +1,5 @@
 import type { DrivingLesson } from '.prisma/client';
-import { DateTime } from 'luxon';
-import { checkOverlap } from '~/utils/booking/calculate-available-slots.server';
+import { DateTime, Interval } from 'luxon';
 
 export function calculateTotalDrivingTime(lessons: DrivingLesson[]) {
     let minutes = 0;
@@ -33,16 +32,63 @@ export function getOverlappingLessons(lessons: DrivingLesson[]) {
             const secondLessonStart = DateTime.fromISO(secondLesson.start);
             const secondLessonEnd = DateTime.fromISO(secondLesson.end);
             if (firstLesson.id !== secondLesson.id) {
-                return checkOverlap(
-                    { start: firstLessonStart, end: firstLessonEnd },
-                    {
-                        start: secondLessonStart,
-                        end: secondLessonEnd,
-                    }
+                return Interval.fromDateTimes(firstLessonStart, firstLessonEnd).overlaps(
+                    Interval.fromDateTimes(secondLessonStart, secondLessonEnd)
                 );
             }
             return false;
         });
+    });
+}
+
+export function getOverlappingAppointments(lessons: DrivingLesson[]) {
+    const overlappingLessons = getOverlappingLessons(lessons);
+    const sortedAppointments = overlappingLessons.slice().sort((a, b) => {
+        return a.start.localeCompare(b.start);
+    });
+
+    // Initialize an array to store the overlapping appointment groups
+    const overlappingGroups: DrivingLesson[][] = [];
+
+    // Initialize the first group with the first appointment
+    overlappingGroups.push([sortedAppointments[0]]);
+
+    // Iterate over the sorted appointments to find overlaps and merge them into groups
+    for (let i = 1; i < sortedAppointments.length; i++) {
+        const currentAppointment = sortedAppointments[i];
+        let foundGroup = false;
+
+        // Check if the current appointment overlaps with any existing group
+        for (let j = 0; j < overlappingGroups.length; j++) {
+            const group = overlappingGroups[j];
+            const lastAppointment = group[group.length - 1];
+
+            if (currentAppointment.start <= lastAppointment.end) {
+                // Appointments overlap, add the current appointment to the group
+                group.push(currentAppointment);
+                foundGroup = true;
+                break;
+            }
+        }
+
+        if (!foundGroup) {
+            // Create a new group for the current appointment
+            overlappingGroups.push([currentAppointment]);
+        }
+    }
+
+    return overlappingGroups;
+}
+
+export function filterSameDayLessons(
+    reference: DrivingLesson,
+    overlappingLessons: DrivingLesson[]
+) {
+    return overlappingLessons.filter((lesson) => {
+        return (
+            DateTime.fromISO(lesson.start).startOf('day') ===
+            DateTime.fromISO(reference.start).startOf('day')
+        );
     });
 }
 

@@ -1,9 +1,11 @@
-import React, { ReactNode, useState } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
+import React, { useRef, useState } from 'react';
 import { cn } from '~/utils/css';
 import { DateTime, Interval } from 'luxon';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useHourRange } from '~/utils/hooks/timegrid';
-import { cva, VariantProps } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import useMeasure from 'react-use-measure';
 import {
     calculateColumns,
@@ -12,6 +14,8 @@ import {
     timeGridConfig,
 } from '~/components/ui/TimeGrid/utils';
 import { useStartDateTimeStore } from '~/components/ui/TimeGrid/state';
+import Login_ from '~/routes/login_';
+import login_ from '~/routes/login_';
 
 const TimeGrid = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
     ({ className, ...props }, ref) => (
@@ -45,13 +49,6 @@ const TimeGridContent = React.forwardRef<HTMLDivElement, TimeGridContentProps>(
 
         return (
             <div ref={ref} className={cn('relative overflow-hidden', className)} {...props}>
-                <div className={'py-4'}>
-                    <DaySwitcher
-                        onDecrease={onDecrease}
-                        onIncrease={onIncrease}
-                        className={'mb-2'}
-                    />
-                </div>
                 <div className={'grid grid-cols-7 pl-24 w-full'}>
                     <Days interval={currentWeek} />
                 </div>
@@ -65,7 +62,7 @@ TimeGridContent.displayName = 'TimeGridContent';
 
 const Days = ({ interval }: { interval: Interval }) => {
     return interval.splitBy({ day: 1 }).map((day) => (
-        <div key={day.start?.weekday} className={'flex w-full gap-3 '}>
+        <div key={day.start?.weekday} className={'flex w-full gap-3 h-full'}>
             <div className={'px-4'}>
                 <div className={'font-medium'}>
                     {day.start?.toLocaleString({ weekday: 'short' })}
@@ -116,7 +113,7 @@ const TimeGridGrid = React.forwardRef<HTMLDivElement, TimeGridGridProps>(
         );
         return (
             <div className={'w-full'}>
-                <div className={'grid gap-5 w-full pb-5'} ref={ref}>
+                <div className={'grid w-full gap-5 pb-5'} ref={ref}>
                     {range.map((date) => (
                         <div key={date.hour} className={'w-full gap-2 flex items-center'}>
                             <p
@@ -160,9 +157,10 @@ Appointments.displayName = 'TimeGridItems';
 const appointmentVariants = cva('h-full w-full p-1', {
     variants: {
         variant: {
-            default: 'bg-gray-500/10',
+            default: 'border border-indigo-300 bg-indigo-500/20 text-indigo-500',
             blocked: 'bg-red-500/10 text-red-500',
             booked: 'bg-green-500/10 text-green-500',
+            overlaps: 'bg-red-100 text-rose-500 border border-rose-300',
         },
     },
     defaultVariants: {
@@ -175,12 +173,14 @@ interface AppointmentProps
         VariantProps<typeof appointmentVariants> {
     start: DateTime;
     end: DateTime;
+    overlapCount?: number;
+    overlapIndex?: number;
     name?: string;
 }
 
 //TODO: Support multiple-day appointments
 const Appointment = React.forwardRef<HTMLDivElement, AppointmentProps>(
-    ({ className, start, end, variant, name, ...props }, ref) => {
+    ({ className, start, end, variant, overlapCount, overlapIndex, name, ...props }, ref) => {
         const { startRow, rowSpan } = calculateRows(start, end);
         const { startColumn, endColumn, numberOfDays } = calculateColumns(start, end);
         const weekStart = useStartDateTimeStore((state) => state.startDateTime);
@@ -193,11 +193,17 @@ const Appointment = React.forwardRef<HTMLDivElement, AppointmentProps>(
         }
         return (
             <div
-                className={cn(appointmentVariants({ variant: variant }))}
+                className={cn(
+                    appointmentVariants({
+                        variant: overlapCount ? 'overlaps' : variant,
+                    })
+                )}
                 style={{
                     gridColumnStart: startColumn,
                     gridRow: `span ${rowSpan} / span ${rowSpan}`,
                     gridRowStart: startRow,
+                    width: overlapCount ? `${100 / overlapCount}%` : '100%',
+                    transform: `translateX(${overlapIndex ? overlapIndex * 100 : 0}%)`,
                 }}>
                 <p className={'text-xs font-semibold'}>{name || 'Termin'}</p>
                 <p className={'text-xs'}>

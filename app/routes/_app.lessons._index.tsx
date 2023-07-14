@@ -4,15 +4,21 @@ import { requireRole } from '~/utils/user/user.server';
 import { ROLE } from '.prisma/client';
 import { getQuery } from '~/utils/general-utils';
 import { findWeeklyLessons } from '~/models/lesson.server';
-import { DateTime } from 'luxon';
+import { DateTime, Interval } from 'luxon';
 import { useLoaderData, useSearchParams } from '@remix-run/react';
 import { LessonStatus } from '@prisma/client';
 import type { ViewMode } from '~/components/features/lesson/LessonOverviewDaySelector';
 import { LessonOverviewDaySelector } from '~/components/features/lesson/LessonOverviewDaySelector';
-import { LessonOverview } from '~/components/features/lesson/LessonOverview';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/Card';
-import { CircleSlash2 } from 'lucide-react';
-import { countIndividualStudents, calculateTotalDrivingTime } from '~/utils/lesson/lesson-utils';
+import { getOverlappingAppointments } from '~/utils/lesson/lesson-utils';
+import { Appointment, TimeGrid, TimeGridContent } from '~/components/ui/TimeGrid';
+import React from 'react';
+import {
+    TimeGridTable,
+    TimeGridTableAppointmentSelector,
+    TimeGridTableContent,
+    TimeGridTableHead,
+} from '~/components/ui/TableTimeGrid';
+import { useHourRange } from '~/utils/hooks/timegrid';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireRole(request, ROLE.INSTRUCTOR);
@@ -21,8 +27,11 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
         instructorId: user.id,
         start: start ? DateTime.fromISO(start) : DateTime.now(),
     });
+    const overlappingGroups = getOverlappingAppointments(
+        lessons.filter((lesson) => lesson.status !== LessonStatus.DECLINED)
+    );
 
-    return json({ lessons, currentUrl: request.url });
+    return json({ lessons, overlappingGroups, currentUrl: request.url });
 };
 
 export const action = async ({ request, params }: DataFunctionArgs) => {
@@ -34,80 +43,45 @@ function getViewMode(searchParams: URLSearchParams): ViewMode {
 }
 
 const LessonOverviewPage = () => {
-    const { lessons } = useLoaderData<typeof loader>();
+    const { lessons, overlappingGroups } = useLoaderData<typeof loader>();
     const activeLessons = lessons.filter((lesson) => lesson.status !== LessonStatus.DECLINED);
     const [searchParams] = useSearchParams();
+    const appointments = activeLessons.map((lesson) => {
+        return {
+            appointmentId: lesson.id,
+            start: DateTime.fromISO(lesson.start),
+            end: DateTime.fromISO(lesson.end),
+            name: `${lesson.student.firstName} ${lesson.student.lastName}`,
+        };
+    });
+    const interval = Interval.fromDateTimes(
+        DateTime.now().startOf('week'),
+        DateTime.now().endOf('week')
+    );
 
     return (
         <>
-            <div className={'grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-4'}>
-                <Card>
-                    <CardHeader className={'pb-2'}>
-                        <CardTitle className='text-sm font-medium'>
-                            Wöchentliche Fahrstunden
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className='text-2xl font-bold'>{activeLessons.length}</div>
-                        <p className='text-xs text-muted-foreground flex items-center gap-1'>
-                            <CircleSlash2 className={'h-3 w-3'}></CircleSlash2>
-                            {activeLessons.length / 5} Fahrstunden / Tag
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className={'pb-2'}>
-                        <CardTitle className='text-sm font-medium'>
-                            Wöchentliche Fahrtzeit
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className='text-2xl font-bold'>
-                            {calculateTotalDrivingTime(activeLessons)}
-                            min
-                        </div>
-                        <p className='text-xs text-muted-foreground flex items-center gap-1'>
-                            <CircleSlash2 className={'h-3 w-3'}></CircleSlash2>
-                            {calculateTotalDrivingTime(activeLessons) / 5}
-                            min / Tag
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className={'pb-2'}>
-                        <CardTitle className='text-sm font-medium'>
-                            Individuelle Fahrschüler
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className='text-2xl font-bold'>
-                            {countIndividualStudents(activeLessons)}
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className={'pb-2'}>
-                        <CardTitle className='text-sm font-medium'>Abgesagte Fahrstunden</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className='text-2xl font-bold'>
-                            {
-                                lessons.filter((lesson) => lesson.status === LessonStatus.DECLINED)
-                                    .length
-                            }{' '}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+            <div className={'grid gap-4 md:grid-cols-2 lg:grid-cols-4'}></div>
             <div className={'sm:overflow-hidden rounded-md'}>
-                <div className={'mt-4 overflow-scroll md:overflow-hidden'}>
+                <div className={'overflow-scroll md:overflow-hidden'}>
                     <LessonOverviewDaySelector></LessonOverviewDaySelector>
                 </div>
             </div>
             <div className={'mt-4'}>
-                <LessonOverview lessons={activeLessons} viewMode={getViewMode(searchParams)} />
+                <TimeGridTable>
+                    <TimeGridTableHead interval={interval} />
+                    <TimeGridTableContent
+                        startHour={6}
+                        endHour={20}
+                        interval={interval}
+                        appointments={appointments}>
+                        <TimeGridTableAppointmentSelector
+                            interval={interval}
+                            hours={useHourRange(6, 20)}
+                            onAppointmentSelection={() => console.log('Select')}
+                        />
+                    </TimeGridTableContent>
+                </TimeGridTable>
             </div>
         </>
     );
