@@ -11,7 +11,7 @@ import { Card, CardDescription, CardTitle } from '~/components/ui/Card';
 import { GeneralUserDataForm } from '~/components/features/user/GeneralUserDataForm';
 import { useNavigate } from 'react-router';
 import { useActionData } from '@remix-run/react';
-import type { ValidationErrors } from '~/types/general-types';
+import type { ValidationErrorActionData } from '~/types/general-types';
 
 const addUserFormSchema = zfd.formData({
     firstName: zfd.text(),
@@ -68,7 +68,7 @@ const AddUserPage = () => {
         navigate('/users');
     };
 
-    const validationErrors = useActionData<ValidationErrors>();
+    const validationErrors = useActionData<ValidationErrorActionData>();
 
     return (
         <Modal open={true} onClose={onClose}>

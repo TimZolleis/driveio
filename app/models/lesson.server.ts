@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
 import { LessonStatus } from '@prisma/client';
 import { prisma } from '../../prisma/db';
+import type { DrivingLesson } from '.prisma/client';
 
 export async function findLesson(lessonId: string) {
     return prisma.drivingLesson.findUnique({ where: { id: lessonId }, include: { student: true } });
@@ -90,6 +91,26 @@ export async function requestLesson({
             end: getSafeISOStringFromDateTime(end),
             status: LessonStatus.REQUESTED,
             description,
+        },
+    });
+}
+
+export async function declineLesson({
+    lessonId,
+    cancelledById,
+    description,
+}: {
+    lessonId: DrivingLesson['id'];
+    cancelledById: string;
+    description: DrivingLesson['description'];
+}) {
+    return prisma.drivingLesson.update({
+        where: { id: lessonId },
+        data: {
+            description,
+            status: LessonStatus.DECLINED,
+            cancelledAt: getSafeISOStringFromDateTime(DateTime.now()),
+            cancelledBy: cancelledById,
         },
     });
 }

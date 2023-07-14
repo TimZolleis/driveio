@@ -222,3 +222,7 @@
     src: url("/resources/fonts/inter/Inter-BlackItalic.woff2?v=3.19") format("woff2"),
     url("/resources/fonts/inter/Inter-BlackItalic.woff?v=3.19") format("woff");
 }
+
+.disabled-background {
+    background-image: repeating-linear-gradient(45deg, #F8F9FB, #F8F9FB 2.5px, #E6E7EB 2.5px, #E6E7EB 5px);
+}

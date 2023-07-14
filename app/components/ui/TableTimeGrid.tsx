@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from '~/utils/css';
-import { Interval, DateTime } from 'luxon';
+import type { Interval } from 'luxon';
+import { DateTime } from 'luxon';
 import type { RectReadOnly } from 'react-use-measure';
 import useMeasure from 'react-use-measure';
 import { useIntervalDays } from '~/utils/luxon/interval';
@@ -8,14 +9,21 @@ import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import { useHourRange } from '~/utils/hooks/timegrid';
 import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
-import { isInWeek } from '~/components/ui/TimeGrid/utils';
+import {
+    calculateDayColumn,
+    getDailyAppointments,
+    getOverlappingAppointments,
+    isInWeek,
+} from '~/components/ui/TimeGrid/utils';
 import { getOverlappingAppointmentGroups } from '~/utils/timegrid/appointment-utils';
+import { raise } from '~/utils/general-utils';
 
 export interface Appointment {
     appointmentId: string;
     start: DateTime;
     end: DateTime;
     name?: string;
+    variant?: VariantProps<typeof appointmentVariants>['variant'];
 }
 
 const TimeGridTable = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
@@ -69,49 +77,18 @@ interface TimeGridTableContentProps extends React.HTMLAttributes<HTMLTableRowEle
     appointments: Appointment[];
     startHour?: number;
     endHour?: number;
+    onAppointmentClick?: (appointment: Appointment) => void;
 }
 
 const TimeGridTableContent = React.forwardRef<HTMLTableRowElement, TimeGridTableContentProps>(
-    ({ className, interval, appointments, startHour, endHour, ...props }, ref) => {
+    (
+        { className, interval, appointments, startHour, endHour, onAppointmentClick, ...props },
+        ref
+    ) => {
         const [tableBodyRef, tableBodyBounds] = useMeasure();
         const [appointmentContainerRef, appointmentContainerBounds] = useMeasure();
         const days = useIntervalDays(interval);
         const hourRange = useHourRange(startHour || 6, endHour || 20);
-        const getAppointmentKey = (appointment: Appointment) => {
-            return `${getSafeISOStringFromDateTime(
-                appointment.start
-            )}-${getSafeISOStringFromDateTime(appointment.end)}`;
-        };
-        const calculateDayColumn = (day: DateTime) => {
-            const firstDayInGrid = days[0];
-            const diff = Math.round(day.diff(firstDayInGrid).as('day'));
-            return diff + 1;
-        };
-
-        const getDailyAppointments = (day: DateTime) => {
-            return appointments.filter((appointment) => {
-                return (
-                    appointment.start.startOf('day') >= day.startOf('day') &&
-                    appointment.start.startOf('day') < day.startOf('day').plus({ day: 1 })
-                );
-            });
-        };
-
-        const getOverlappingAppointments = (appointments: Appointment[]) => {
-            return appointments.filter((firstAppointment) => {
-                return appointments.some((secondAppointment) => {
-                    if (firstAppointment.appointmentId !== secondAppointment.appointmentId) {
-                        return Interval.fromDateTimes(
-                            firstAppointment.start,
-                            firstAppointment.end
-                        ).overlaps(
-                            Interval.fromDateTimes(secondAppointment.start, secondAppointment.end)
-                        );
-                    }
-                    return false;
-                });
-            });
-        };
 
         return (
             <tbody className={'relative'} ref={tableBodyRef}>
@@ -126,14 +103,14 @@ const TimeGridTableContent = React.forwardRef<HTMLTableRowElement, TimeGridTable
                     }}
                     {...props}>
                     {days.map((day) => {
-                        const dailyAppointments = getDailyAppointments(day);
+                        const dailyAppointments = getDailyAppointments(appointments, day);
                         const overlapping = getOverlappingAppointments(appointments);
                         const overlappingGroups = getOverlappingAppointmentGroups(overlapping);
                         return (
                             <td
                                 key={day.day}
                                 className={'relative m-0 p-0'}
-                                style={{ gridColumnStart: calculateDayColumn(day) }}>
+                                style={{ gridColumnStart: calculateDayColumn(days, day) }}>
                                 {dailyAppointments.map((appointment) => {
                                     /**
                                      * This map is for adding the index and the respective group size to an onedimensional array
@@ -170,6 +147,11 @@ const TimeGridTableContent = React.forwardRef<HTMLTableRowElement, TimeGridTable
 
                                     return (
                                         <TimeGridTableAppointment
+                                            onClick={() =>
+                                                onAppointmentClick
+                                                    ? onAppointmentClick(appointment)
+                                                    : void 0
+                                            }
                                             appointmentId={appointment.appointmentId}
                                             show={isInWeek(
                                                 interval,
@@ -185,6 +167,7 @@ const TimeGridTableContent = React.forwardRef<HTMLTableRowElement, TimeGridTable
                                             name={appointment.name}
                                             overlapIndex={overlapIndex}
                                             overlapCount={overlapCount}
+                                            variant={appointment.variant}
                                         />
                                     );
                                 })}
@@ -214,10 +197,11 @@ interface TimeGridTableAppointmentProps
 const appointmentVariants = cva('absolute border h-full p-1 pointer-events-auto', {
     variants: {
         variant: {
-            default: 'border-indigo-300 bg-indigo-500/20 text-indigo-500',
+            default: 'border-indigo-300 bg-indigo-500/20 text-indigo-500 hover:bg-indigo-500/30',
             blocked: 'bg-gray-500/20 text-gray-500',
             error: 'bg-red-500/20 border-red-300 text-red-500',
             overlaps: 'bg-red-100 text-rose-500 border border-rose-300',
+            disabled: 'disabled-background',
         },
     },
     defaultVariants: {
@@ -274,7 +258,8 @@ const TimeGridTableAppointment = React.forwardRef<
                     }%)`,
                     height: calculateAppointmentHeight(),
                 }}
-                className={appointmentVariants({ variant: overlapCount ? 'overlaps' : variant })}>
+                className={appointmentVariants({ variant: overlapCount ? 'overlaps' : variant })}
+                onClick={props.onClick}>
                 <p className={'font-semibold text-xs'}>{name || 'Termin'}</p>
                 <p className={'text-xs font-normal'}>
                     {start.toLocaleString(DateTime.TIME_SIMPLE)} -{' '}
@@ -289,7 +274,7 @@ TimeGridTableAppointment.displayName = 'TimeGridTableAppointment';
 interface TimeGridTableAppointmentSelectorProps extends React.HTMLAttributes<HTMLTableRowElement> {
     interval: Interval;
     hours: DateTime[];
-    onAppointmentSelection: (day: number | undefined, time: string) => void;
+    onAppointmentSelection: (day: string, time: string) => void;
 }
 
 const TimeGridTableAppointmentSelector = React.forwardRef<
@@ -308,7 +293,12 @@ const TimeGridTableAppointmentSelector = React.forwardRef<
                 return (
                     <td
                         onClick={() =>
-                            onAppointmentSelection(day.start?.day, date.toFormat('HH:mm'))
+                            onAppointmentSelection(
+                                getSafeISOStringFromDateTime(
+                                    day?.start ?? raise('Error in interval')
+                                ),
+                                date.toFormat('HH:mm')
+                            )
                         }
                         key={day.start?.weekday}
                         className='border h-[40px] hover:bg-gray-200 z-10'>

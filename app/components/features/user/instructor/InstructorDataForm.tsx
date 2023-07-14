@@ -1,5 +1,5 @@
-import { InstructorData } from '.prisma/client';
-import { ValidationErrors } from '~/types/general-types';
+import type { InstructorData } from '.prisma/client';
+import type { ValidationErrorActionData } from '~/types/general-types';
 import { Form, Link } from '@remix-run/react';
 import { Label } from '~/components/ui/Label';
 import { Separator } from '~/components/ui/Seperator';
@@ -8,7 +8,7 @@ import { Button, buttonVariants } from '~/components/ui/Button';
 
 interface InstructorDataFormProps {
     instructorData?: InstructorData;
-    errors?: ValidationErrors;
+    errors?: ValidationErrorActionData;
 }
 
 export const InstructorDataForm = ({ instructorData, errors }: InstructorDataFormProps) => {

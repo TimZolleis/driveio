@@ -10,7 +10,7 @@ import {
 import { Button, buttonVariants } from '~/components/ui/Button';
 import type { User } from '.prisma/client';
 import { ROLE } from '.prisma/client';
-import type { ValidationErrors } from '~/types/general-types';
+import type { ValidationErrorActionData } from '~/types/general-types';
 
 export const GeneralUserDataForm = ({
     user,
@@ -21,7 +21,7 @@ export const GeneralUserDataForm = ({
     user?: User | null;
     action?: string;
     className?: string;
-    errors?: ValidationErrors;
+    errors?: ValidationErrorActionData;
 }) => {
     return (
         <Form method={'post'} action={action} className={className}>

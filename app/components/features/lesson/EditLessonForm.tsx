@@ -2,7 +2,7 @@ import { Form, Link } from '@remix-run/react';
 import { Input } from '~/components/ui/Input';
 import { Button, buttonVariants } from '~/components/ui/Button';
 import type { LessonWithStudent } from '~/routes/_app.lessons';
-import type { ValidationErrors } from '~/types/general-types';
+import type { ValidationErrorActionData, ValidationErrors } from '~/types/general-types';
 import { Label } from '~/components/ui/Label';
 import { DatePicker } from '~/components/ui/DatePicker';
 import { Textarea } from '~/components/ui/TextArea';
@@ -16,7 +16,7 @@ export const EditLessonForm = ({
     errors?: ValidationErrors;
 }) => {
     return (
-        <Form method={'POST'}>
+        <>
             <div className={'grid  gap-3'}>
                 <div>
                     <Label>Datum</Label>
@@ -50,12 +50,6 @@ export const EditLessonForm = ({
                 </div>
             </div>
             <p className={'text-sm text-destructive'}>{errors?.error}</p>
-            <div className={'flex gap-3 justify-end mt-5'}>
-                <Link className={buttonVariants({ variant: 'outline' })} to={'/lessons/plan'}>
-                    Abbruch
-                </Link>
-                <Button>Speichern</Button>
-            </div>
-        </Form>
+        </>
     );
 };

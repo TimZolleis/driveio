@@ -1,5 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from '~/components/ui/Tabs';
-import { useSearchParams } from '@remix-run/react';
+import { useFetcher, useSearchParams } from '@remix-run/react';
 
 const viewModes = [
     {
@@ -29,46 +29,38 @@ const viewModes = [
 ] as const;
 export type ViewMode = (typeof viewModes)[number]['value'];
 
-function getViewModeValue(viewMode: string | null) {
+function getViewModeValue(viewMode: string | undefined) {
     switch (viewMode) {
-        case 'monday': {
-            return 'monday';
-        }
-        case 'tuesday': {
-            return 'tuesday';
-        }
-        case 'wednesday': {
-            return 'wednesday';
-        }
-        case 'thursday': {
-            return 'thursday';
-        }
-        case 'friday': {
-            return 'friday';
-        }
+        case 'monday':
+        case 'tuesday':
+        case 'wednesday':
+        case 'thursday':
+        case 'friday':
+            return viewMode;
+        default:
+            return 'weekly';
     }
-    return 'weekly';
 }
 
-export const LessonOverviewDaySelector = () => {
+export const LessonOverviewDaySelector = ({ viewMode }: { viewMode: ViewMode | undefined }) => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const viewMode = searchParams.get('view');
-
+    const fetcher = useFetcher();
     return (
-        <Tabs
-            onValueChange={(value) => {
-                searchParams.set('view', value);
-                setSearchParams(searchParams);
-            }}
-            defaultValue={getViewModeValue(viewMode)}
-            className={'mt-4'}>
-            <TabsList>
-                {viewModes.map((mode) => (
-                    <TabsTrigger key={mode.value} value={mode.value}>
-                        {mode.name}
-                    </TabsTrigger>
-                ))}
-            </TabsList>
-        </Tabs>
+        <fetcher.Form>
+            <Tabs
+                onValueChange={(value) => {
+                    fetcher.submit({ viewMode: value }, { method: 'post' });
+                }}
+                defaultValue={getViewModeValue(viewMode)}
+                className={'mt-4'}>
+                <TabsList>
+                    {viewModes.map((mode) => (
+                        <TabsTrigger key={mode.value} value={mode.value}>
+                            {mode.name}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
+        </fetcher.Form>
     );
 };

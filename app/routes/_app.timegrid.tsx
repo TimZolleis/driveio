@@ -40,12 +40,14 @@ const TimeGridPage = () => {
         name: 'Tim Zolleis',
         start: DateTime.fromISO('2023-07-14T08:00:00.000+02:00'),
         end: DateTime.fromISO('2023-07-14T09:30:00.000+02:00'),
+        disabled: true,
     };
     const testAppointment2 = {
         appointmentId: '122334',
         name: 'Tim Zolleis',
         start: DateTime.fromISO('2023-07-14T10:00:00.000+02:00'),
         end: DateTime.fromISO('2023-07-14T11:30:00.000+02:00'),
+        disabled: true,
     };
 
     const testAppointment3 = {
@@ -53,6 +55,7 @@ const TimeGridPage = () => {
         name: 'Tim Zolleis',
         start: DateTime.fromISO('2023-07-14T12:00:00.000+02:00'),
         end: DateTime.fromISO('2023-07-14T13:30:00.000+02:00'),
+        disabled: false,
     };
 
     const testAppointment4 = {
@@ -60,6 +63,7 @@ const TimeGridPage = () => {
         name: 'Tim Zolleis',
         start: DateTime.fromISO('2023-07-14T14:30:00.000+02:00'),
         end: DateTime.fromISO('2023-07-14T16:00:00.000+02:00'),
+        disabled: true,
     };
 
     return (
