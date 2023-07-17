@@ -74,12 +74,12 @@ function getRandomHexColor() {
     const green = Math.floor(Math.random() * 256);
     const blue = Math.floor(Math.random() * 256);
 
-    // Convert RGB to hex
+    // Convert RGB to hex color
     return '#' + ((1 << 24) | (red << 16) | (green << 8) | blue).toString(16).slice(1);
 }
 
-const HexColorPicker = () => {
-    const [randomColor, setRandomColor] = useState(getRandomHexColor());
+export const HexColorPicker = ({ defaultValue }: { defaultValue?: string }) => {
+    const [randomColor, setRandomColor] = useState(defaultValue || getRandomHexColor());
     return (
         <div className={'flex items-center gap-2'}>
             <Input

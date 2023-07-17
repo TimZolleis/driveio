@@ -44,9 +44,9 @@ model LessonType {
 
 model LessonTypeLicenseClass {
   licenseClassId String
-  licenseClass   LicenseClass @relation(fields: [licenseClassId], references: [id])
+  licenseClass   LicenseClass @relation(fields: [licenseClassId], references: [id], onDelete: Cascade)
   lessonTypeId   String
-  lessonType     LessonType   @relation(fields: [lessonTypeId], references: [id])
+  lessonType     LessonType   @relation(fields: [lessonTypeId], references: [id], onDelete: Cascade)
   minimumDrives  Int
 
   @@id([licenseClassId, lessonTypeId])
@@ -84,6 +84,14 @@ model User {
   managementData  ManagementData?
   blockedSlots    BlockedSlot[]
   lessons         DrivingLesson[]
+  abilities       Ability[]
+}
+
+model Ability {
+  id          String @id @default(uuid())
+  displayName String
+  value       String @unique
+  user        User[]
 }
 
 model StudentData {

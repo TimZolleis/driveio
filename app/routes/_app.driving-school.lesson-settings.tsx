@@ -12,8 +12,9 @@ import { Label } from '~/components/ui/Label';
 import { Input } from '~/components/ui/Input';
 import { zfd } from 'zod-form-data';
 import { Plus, X } from 'lucide-react';
-import { Button, buttonVariants } from '~/components/ui/Button';
-import { cn } from '~/utils/css';
+import { buttonVariants } from '~/components/ui/Button';
+import { changeHexOpacity, cn } from '~/utils/css';
+import { useState } from 'react';
 
 export const meta: V2_MetaFunction = () => {
     return [{ title: 'New Remix App' }, { name: 'description', content: 'Welcome to Remix!' }];
@@ -49,6 +50,16 @@ export const action = async ({ request }: DataFunctionArgs) => {
         if (intent === 'deleteLessonType') {
             const lessonTypeId = formData.get('lessonTypeId')?.toString();
             await prisma.lessonType.delete({ where: { id: lessonTypeId } });
+        }
+        if (intent === 'editLessonType') {
+            const lessonTypeId = formData.get('lessonTypeId')?.toString();
+            await prisma.lessonType.update({
+                where: { id: lessonTypeId },
+                data: {
+                    name: formData.get('name')?.toString(),
+                    color: formData.get('color')?.toString(),
+                },
+            });
         } else {
             const { licenseClass } = addLicenseClassSchema.parse(formData);
             await prisma.licenseClass.upsert({
@@ -94,7 +105,7 @@ const Index = () => {
                         <h4 className={'font-medium text-lg'}>Fahrstundentypen</h4>
                         <p className={'text-muted-foreground text-sm'}>Überland, Autobahn etc.</p>
                     </div>
-                    <Link to={'new'} className={cn(buttonVariants(), 'space-x-2')}>
+                    <Link to={'add-type'} className={cn(buttonVariants(), 'space-x-2')}>
                         <Plus /> <p>Hinzufügen</p>
                     </Link>
                 </div>
@@ -130,21 +141,16 @@ const LicenseClassTag = ({ licenseClass }: { licenseClass: LicenseClass }) => {
     );
 };
 
-function changeHexOpacity(hexValue: string, opacity: number) {
-    const hex = hexValue.replace('#', '');
-    const red = parseInt(hex.substring(0, 2), 16);
-    const green = parseInt(hex.substring(2, 4), 16);
-    const blue = parseInt(hex.substring(4, 6), 16);
-    return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
-}
-
 const LessonTypeTag = ({ lessonType }: { lessonType: LessonType }) => {
     const fetcher = useFetcher();
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     return (
         <div
             style={{ background: changeHexOpacity(lessonType.color, 0.2) }}
-            className={'px-3 flex py-1 rounded-md text-sm font-medium items-center gap-2'}>
-            <p>{lessonType.name}</p>
+            className={
+                'px-3 flex py-1 rounded-md text-sm font-medium items-center gap-2 hover:cursor-pointer'
+            }>
+            <Link to={`edit-type/${lessonType.id}`}>{lessonType.name}</Link>
             <X
                 onClick={() =>
                     fetcher.submit(

@@ -24,7 +24,12 @@ const drivingSchoolNavigation = [
     },
     {
         title: 'Führerscheinklassen',
-        href: 'lesson-types',
+        href: 'lesson-settings',
+        show: true,
+    },
+    {
+        title: 'Klassenspezifische Einstellungen',
+        href: 'class-settings',
         show: true,
     },
 ];
