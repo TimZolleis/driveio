@@ -1,4 +1,4 @@
-import { SidebarNav } from '~/components/features/SideNavigation';
+import { SidebarNav, TopNavigation } from '~/components/features/SideNavigation';
 import { Link, Outlet, useLoaderData, Await } from '@remix-run/react';
 import { getFullName } from '~/utils/hooks/user';
 import type { DataFunctionArgs } from '@remix-run/node';
@@ -49,7 +49,7 @@ const UserDetailsPage = () => {
     const { user, managementUser } = useLoaderData<typeof loader>();
     return (
         <div className={''}>
-            <div className={'space-y-6 pb-6 px-6'}>
+            <div className={'space-y-6 px-6'}>
                 <div className='space-y-0.5 mb-6'>
                     <div className={'flex items-center text-brand-800'}>
                         <ChevronLeft size={18} />
@@ -76,10 +76,9 @@ const UserDetailsPage = () => {
                         </Await>
                     </Suspense>
                 </div>
-                <Separator className='my-6 ' />
             </div>
-            <div className={'px-6 flex flex-col lg:flex-row lg:gap-10'}>
-                <SidebarNav items={sidebarNavItems(managementUser)}></SidebarNav>
+            <div className={'px-6 flex flex-col gap-5'}>
+                <TopNavigation items={sidebarNavItems(managementUser)}></TopNavigation>
                 <Outlet />
             </div>
         </div>

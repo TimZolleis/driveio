@@ -28,6 +28,7 @@
     "@remix-run/react": "^1.18.1",
     "@remix-run/vercel": "^1.18.1",
     "@tanstack/react-table": "^8.9.2",
+    "@use-gesture/react": "^10.2.27",
     "@vercel/node": "^2.10.3",
     "axios": "^1.4.0",
     "class-variance-authority": "^0.6.0",

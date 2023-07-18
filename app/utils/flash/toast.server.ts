@@ -5,11 +5,12 @@ import { json } from '@remix-run/node';
 export interface Toast {
     title: string;
     description: string;
+    type?: 'success' | 'error';
 }
 
-export async function toastMessage(request: Request, { title, description }: Toast) {
+export async function toastMessage(request: Request, { title, description, type }: Toast) {
     const session = await getSession(request);
-    session.flash('toast', { title, description });
+    session.flash('toast', { title, description, type });
     return commitSession(session);
 }
 
@@ -35,12 +36,12 @@ export async function sendSaveSuccessMessage(request: Request, type: string, use
 
 export async function sendJsonWithSuccessMessage<T extends Object>(
     request: Request,
-    { title, description }: Toast,
+    { title, description, type }: Toast,
     data?: T
 ) {
     return json(data || {}, {
         headers: {
-            'Set-Cookie': await toastMessage(request, { title, description }),
+            'Set-Cookie': await toastMessage(request, { title, description, type }),
         },
     });
 }

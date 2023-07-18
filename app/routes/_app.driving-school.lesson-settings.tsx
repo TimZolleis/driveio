@@ -144,7 +144,9 @@ const Index = () => {
                 <div className={'flex item-center justify-between'}>
                     <div>
                         <h4 className={'font-medium text-lg'}>Fahrstundentypen</h4>
-                        <p className={'text-muted-foreground text-sm'}>Überland, Autobahn etc.</p>
+                        <p className={'text-muted-foreground text-sm'}>
+                            Die Reihenfolge bestimmt die automatische Fahrstundenzuweisung
+                        </p>
                     </div>
                     <Link to={'add-type'} className={cn(buttonVariants(), 'space-x-2')}>
                         <Plus /> <p>Hinzufügen</p>

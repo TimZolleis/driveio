@@ -19,6 +19,7 @@ import { Alert, AlertDescription, AlertTitle } from '~/components/ui/Alert';
 import { AlertTriangle } from 'lucide-react';
 import { PendingRegistration } from '~/components/features/user/Registration';
 import { getRandomCode } from '~/routes/_app.users.add';
+import { PageHeader } from '~/components/ui/PageHeader';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const userId = requireParameter('userId', params);
@@ -65,7 +66,7 @@ const UserRegistrationPage = () => {
     return (
         <div className={'w-full'}>
             <div>
-                <h3 className='text-lg font-medium'>Registrierung</h3>
+                <PageHeader>Registrierung</PageHeader>
                 <p className='text-sm text-muted-foreground'>
                     Hier kann eine neuer Benutzer eingeladen / sein Passwort zurückgesetzt werden
                 </p>

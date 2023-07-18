@@ -4,7 +4,7 @@ import { checkIfUserSetupComplete, getUser } from '~/utils/user/user.server';
 import { Outlet, useLoaderData } from '@remix-run/react';
 import { PageHeader } from '~/components/ui/PageHeader';
 import { HorizontalNav } from '~/components/features/nav/HorizontalNav';
-import { SidebarNav } from '~/components/features/SideNavigation';
+import { SidebarNav, TopNavigation } from '~/components/features/SideNavigation';
 
 export const meta: V2_MetaFunction = () => {
     return [{ title: 'New Remix App' }, { name: 'description', content: 'Welcome to Remix!' }];
@@ -39,9 +39,11 @@ const Index = () => {
     return (
         <>
             <PageHeader>Fahrschuleinstellungen</PageHeader>
-            <div className={'flex flex-col xl:flex-row items-start mt-4 gap-10 px-6'}>
-                <SidebarNav items={drivingSchoolNavigation} />
-                <Outlet />
+            <div className={'flex flex-col items-start mt-4 gap-5'}>
+                <TopNavigation items={drivingSchoolNavigation} />
+                <div className={'px-3 w-full'}>
+                    <Outlet />
+                </div>
             </div>
         </>
     );

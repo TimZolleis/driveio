@@ -22,6 +22,7 @@ import { getLicenseClasses } from '~/models/license-class.server';
 import { getLessonTypes } from '~/models/lesson-type.server';
 import { useEffect } from 'react';
 import { upsertStudentData } from '~/models/student-data.server';
+import { PageHeader } from '~/components/ui/PageHeader';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const userId = requireParameter('userId', params);
@@ -156,7 +157,7 @@ const SetupUserDataPage = () => {
     return (
         <div className={'w-full'}>
             <div>
-                <h3 className='text-lg font-medium'>Stammdaten</h3>
+                <PageHeader>Stammdaten</PageHeader>
                 <p className='text-sm text-muted-foreground'>
                     Hier können die Stammdaten eines Fahrschülers / Fahrlehrers bearbeitet werden
                 </p>

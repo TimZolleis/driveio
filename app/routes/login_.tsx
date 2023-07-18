@@ -73,7 +73,6 @@ export const action = async ({ request }: DataFunctionArgs) => {
 
 const LoginPage = () => {
     const fetcher = useDebounceFetcher<FetcherData>();
-    console.log(fetcher.data);
     const isValidUser = fetcher.data?.isValidUser;
     const formValidationErrors = fetcher.data?.formValidationErrors;
     const navigation = useNavigation();

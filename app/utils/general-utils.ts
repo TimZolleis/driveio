@@ -4,6 +4,8 @@ import { json, redirect, TypedResponse } from '@remix-run/node';
 import { errors } from '~/messages/errors';
 import type React from 'react';
 import { useState } from 'react';
+import type { SchemaValidationErrorActionData } from '~/types/general-types';
+import { toastMessage } from '~/utils/flash/toast.server';
 
 export function requireParameter(parameter: string, parameters: Params) {
     const value = parameters[parameter];
@@ -32,7 +34,7 @@ export function handleActionError(error: unknown) {
         return json({ formValidationErrors: error.formErrors.fieldErrors });
     }
     if (error instanceof Error) {
-        return json({ error: error.message });
+        return json({ error: error.message }, {});
     }
     return json({ error: errors.unknown });
 }
@@ -92,4 +94,15 @@ export function useDoubleCheck() {
     }
 
     return { doubleCheck, getButtonProps };
+}
+
+export function transformErrors<T>(
+    errors: SchemaValidationErrorActionData<T>['formValidationErrors']
+) {
+    const transformedErrors: { [P in keyof T]?: string } = {};
+    const keys = Object.keys(errors);
+    keys.forEach((key) => {
+        transformedErrors[key as keyof typeof errors] = errors?.[key as keyof typeof errors]?.[0];
+    });
+    return transformedErrors;
 }

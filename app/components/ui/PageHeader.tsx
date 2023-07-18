@@ -19,13 +19,9 @@ const pageHeaderVariants = cva('text-primary', {
 export const PageHeader = ({
     variant,
     children,
-    showSubmission,
-    submission,
 }: {
     variant?: VariantProps<typeof pageHeaderVariants>['variant'];
     children?: ReactNode;
-    showSubmission?: boolean;
-    submission?: 'submitting' | 'loading' | 'idle';
 }) => {
     return (
         <div className={'flex items-center gap-2'}>

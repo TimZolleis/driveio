@@ -70,7 +70,14 @@ export default function App() {
 
     useEffect(() => {
         if (toastMessage) {
-            toast(toastMessage.title, { description: toastMessage.description });
+            if (toastMessage.type === 'success') {
+                toast.success(toastMessage.title, { description: toastMessage.description });
+            }
+            if (toastMessage.type === 'error') {
+                toast.error(toastMessage.title, { description: toastMessage.description });
+            } else {
+                toast(toastMessage.title, { description: toastMessage.description });
+            }
         }
     }, [toastMessage]);
 
@@ -83,7 +90,7 @@ export default function App() {
                 <Links />
             </head>
             <body>
-                <Toaster closeButton={true} />
+                <Toaster richColors={true} closeButton={true} />
                 <Outlet />
                 <ScrollRestoration />
                 <Scripts />

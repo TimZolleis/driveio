@@ -16,6 +16,7 @@ import { Checkbox } from '~/components/ui/CheckBox';
 import login_ from '~/routes/login_';
 import { toastMessage } from '~/utils/flash/toast.server';
 import { Switch } from '~/components/ui/Switch';
+import { PageHeader } from '~/components/ui/PageHeader';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const managementUser = await requireUserWithPermission(request, 'permissions.view');
@@ -63,7 +64,7 @@ const EditUserPermissionsPage = () => {
     return (
         <div className={'w-full'}>
             <div>
-                <h3 className='text-lg font-medium'>Berechtigungen</h3>
+                <PageHeader>Berechtigungen</PageHeader>
                 <p className='text-sm text-muted-foreground'>
                     Hier können die Berechtigungen des Benutzers bearbeitet werden.
                 </p>
