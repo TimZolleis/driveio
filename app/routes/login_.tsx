@@ -15,10 +15,17 @@ import { findUserByEmail } from '~/models/user.server';
 import { commitSession, getSession } from '~/utils/session/session.server';
 import { Loader } from 'lucide-react';
 import { motion } from 'framer-motion';
+import type { ValidationErrors } from '~/types/general-types';
 
 const loginSchema = zfd.formData({
     password: zfd.text(z.string({ required_error: errors.login.password.required })),
 });
+
+interface FetcherData {
+    isValidUser?: boolean;
+    error?: string;
+    formValidationErrors: ValidationErrors;
+}
 
 export const loader = async ({ request }: DataFunctionArgs) => {
     const user = await getUser(request);
@@ -65,10 +72,10 @@ export const action = async ({ request }: DataFunctionArgs) => {
 };
 
 const LoginPage = () => {
-    const fetcher = useDebounceFetcher<typeof loader>();
+    const fetcher = useDebounceFetcher<FetcherData>();
+    console.log(fetcher.data);
     const isValidUser = fetcher.data?.isValidUser;
-    const data = useActionData();
-    const formValidationErrors = data?.formValidationErrors;
+    const formValidationErrors = fetcher.data?.formValidationErrors;
     const navigation = useNavigation();
     return (
         <main className={'min-h-screen w-full'}>
@@ -85,16 +92,21 @@ const LoginPage = () => {
                         autosave={true}
                         name={'email'}
                         placeholder={'name@email.com'}
-                        error={formValidationErrors?.email}></Input>
+                        error={formValidationErrors?.email?.[0]}></Input>
                     {!isValidUser && (
-                        <Button isLoading={fetcher.state === 'submitting'}>Weiter</Button>
+                        <>
+                            <Button isLoading={fetcher.state === 'submitting'}>Weiter</Button>
+                            <Label variant={'description'} color={'destructive'}>
+                                {errors.login.email.invalid}
+                            </Label>
+                        </>
                     )}
                 </fetcher.Form>
                 {isValidUser && (
                     <Form method={'post'} className={'grid max-w-md w-full mt-5 gap-2'}>
                         <Label>Passwort</Label>
                         <Password
-                            error={formValidationErrors?.password}
+                            error={formValidationErrors?.password?.[0]}
                             name={'password'}
                             revealable={false}
                             type={'password'}
@@ -104,7 +116,7 @@ const LoginPage = () => {
                     </Form>
                 )}
                 <Label variant={'description'} color={'destructive'} className={'mt-2'}>
-                    {data?.error}
+                    {fetcher.data?.error}
                 </Label>
                 <div className={'text-center mt-2'}></div>
                 <Link

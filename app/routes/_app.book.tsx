@@ -42,27 +42,45 @@ import { findBlockedSlots } from '~/models/blocked-slot.server';
 import { checkInstructorLimits } from '~/utils/user/instructor/verify-instructor-limits.server';
 import { bookingConfig } from '~/config/bookingConfig';
 import { checkStudentLimits } from '~/utils/user/student/verify-student-limits-server';
+import { requireUserWithPermission } from '~/utils/user/permissions.server';
+import { tupleExpression } from '@babel/types';
+
+const trainingPhaseHierachy = {
+    EXAM_PREPARATION: 3,
+    EXTENSIVE: 2,
+    DEFAULT: 0,
+};
 
 export const loader = async ({ request }: DataFunctionArgs) => {
-    const user = await requireRole(request, ROLE.STUDENT);
+    /**
+     * First, we require the permission to book a lesson
+     */
+    const user = await requireUserWithPermission(request, 'lesson.book');
+    /**
+     * To save some DB queries, we check if the current parameters are even allowed
+     */
     const disabledDays = await getDisabledDays(bookingConfig.start, bookingConfig.end);
     const parameters = await verifyParameters(request, disabledDays);
     if (parameters.requiresRedirect) {
         return redirect(parameters?.redirectUrl || '/');
     }
+    /**
+     * Now we need a little bit more information about the user, so we fetch the studentData and the instructorData
+     */
     const studentData = await findStudentData(user.id, true).then((result) =>
         requireResult(result, errors.student.noStudentData)
     );
     const instructorData = await findInstructorData(
         studentData.instructorId ?? raise(errors.student.noStudentData)
     ).then((result) => requireResult(result, errors.instructor.noInstructorData));
-    const blockedSlots = await findBlockedSlots(instructorData.userId).then((slots) =>
-        slots.filter((slot) => filterBlockedSlots(slot, parameters.date))
-    );
+    //We need to know how many lessons the instructor has today
     const lessons = await findLessons({
         instructorId: instructorData.userId,
         date: parameters.date,
     });
+    /**
+     * Since we now have information about the student and the instructor, we can check if either has exceeded his limits
+     */
     const { studentLimitExceeded, studentLessonsRemaining } = await checkStudentLimits(
         user.id,
         studentData,
@@ -82,13 +100,35 @@ export const loader = async ({ request }: DataFunctionArgs) => {
     ) {
         return json({ availableSlots: [], disabledDays, studentLessonsRemaining });
     }
+    /**
+     * Now that we know that instructor and student are allowed to have a lesson, we can find the available slots
+     */
+    const blockedSlots = await findBlockedSlots(instructorData.userId).then((slots) =>
+        slots.filter((slot) => filterBlockedSlots(slot, parameters.date))
+    );
+    /**
+     * Since we have a hierarchy of different training phases, we now have to filter out lessons that are below the students training phase
+     */
+    const filteredLessons = lessons.filter((lesson) => {
+        const studentTrainingPhase = studentData.trainingPhase;
+        const trainingPhase = lesson.student.studentData?.trainingPhase;
+        if (!trainingPhase || trainingPhase === 'EXAM_PREPARATION') {
+            return true;
+        }
+        const studentTrainingPhaseHierarchy = trainingPhaseHierachy[studentTrainingPhase];
+        const trainingPhaseHierarchy = trainingPhaseHierachy[trainingPhase];
+        if (studentTrainingPhaseHierarchy === trainingPhaseHierarchy) {
+            return true;
+        }
+        return trainingPhaseHierarchy > studentTrainingPhaseHierarchy;
+    });
 
     const availableSlots = findAvailableSlots({
         workStart: instructorData.workStartTime,
         workEnd: instructorData.workEndTime,
         slotDuration: parseInt(parameters.duration),
         blockedSlots,
-        bookedLessons: lessons,
+        bookedLessons: filteredLessons,
         waitingTimeAfterLesson: studentData.waitingTime,
     });
     return json({ availableSlots, disabledDays, studentLessonsRemaining });
@@ -157,31 +197,13 @@ const BookPage = () => {
                 <div>
                     <PageHeader>Fahrstunden buchen</PageHeader>
 
-                    <p className={'text-xs text-muted-foreground'}>
+                    <p className={'text-sm text-muted-foreground'}>
                         Du kannst diese Woche noch{' '}
                         <span className={'font-semibold text-primary'}>
                             {studentLessonsRemaining} Fahrstunden
                         </span>{' '}
                         buchen
                     </p>
-                </div>
-                <div>
-                    <Label>Fahrtdauer</Label>
-                    <Select
-                        onValueChange={(duration) => updateDuration(duration)}
-                        defaultValue={duration || '90'}>
-                        <SelectTrigger className={'w-[180px]'}>
-                            <SelectValue placeholder={'Fahrtdauer auswählen'} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectLabel>Fahrtdauer</SelectLabel>
-                                <SelectItem value='45'>45 Minuten</SelectItem>
-                                <SelectItem value='90'>90 Minuten</SelectItem>
-                                <SelectItem value='135'>135 Minuten</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
                 </div>
             </div>
             <div className={'grid md:flex gap-2 md:p-3'}>

@@ -22,7 +22,7 @@ const AppLayoutPage = () => {
                     <Outlet />
                 </InstructorLayout>
             ) : (
-                <div className={'py-5'}>
+                <div className={'p-5'}>
                     <Outlet />
                 </div>
             )}

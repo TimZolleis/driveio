@@ -25,7 +25,11 @@ export async function findLessons({
             status: 'REQUESTED' || 'CONFIRMED',
         },
         include: {
-            student: true,
+            student: {
+                include: {
+                    studentData: true,
+                },
+            },
         },
     });
 }
