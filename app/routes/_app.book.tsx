@@ -2,24 +2,14 @@ import type { DataFunctionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import * as React from 'react';
 import { useState } from 'react';
-import { requireRole, requireUser } from '~/utils/user/user.server';
+import { requireRole } from '~/utils/user/user.server';
 import { useLoaderData, useRouteError, useSearchParams } from '@remix-run/react';
 import { errors } from '~/messages/errors';
 import { requireResult } from '~/utils/db/require-result.server';
 import { ErrorComponent } from '~/components/ui/ErrorComponent';
 import { PageHeader } from '~/components/ui/PageHeader';
-import { Label } from '~/components/ui/Label';
 import { Calendar } from '~/components/ui/Calendar';
 import { DateTime } from 'luxon';
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from '~/components/ui/Select';
 import {
     filterBlockedSlots,
     findAvailableSlots,
@@ -43,7 +33,6 @@ import { checkInstructorLimits } from '~/utils/user/instructor/verify-instructor
 import { bookingConfig } from '~/config/bookingConfig';
 import { checkStudentLimits } from '~/utils/user/student/verify-student-limits-server';
 import { requireUserWithPermission } from '~/utils/user/permissions.server';
-import { tupleExpression } from '@babel/types';
 
 const trainingPhaseHierachy = {
     EXAM_PREPARATION: 3,
