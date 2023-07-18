@@ -31,6 +31,7 @@ model LicenseClass {
   drivingSchool   DrivingSchool            @relation(fields: [drivingSchoolId], references: [id])
   name            String                   @unique
   lessonTypes     LessonTypeLicenseClass[]
+  studentData     StudentData[]
 }
 
 model LessonType {
@@ -39,6 +40,8 @@ model LessonType {
   drivingSchool   DrivingSchool            @relation(fields: [drivingSchoolId], references: [id])
   name            String
   color           String
+  index           Int
+  studentData     StudentData[]
   licenseClasses  LessonTypeLicenseClass[]
 }
 
@@ -75,6 +78,7 @@ model User {
   role            ROLE
   admin           Boolean
   setupComplete   Boolean         @default(false)
+  enabled         Boolean         @default(true)
   registration    Registration?
   profileImage    Image?
   drivingSchool   DrivingSchool   @relation(fields: [drivingSchoolId], references: [id])
@@ -84,10 +88,10 @@ model User {
   managementData  ManagementData?
   blockedSlots    BlockedSlot[]
   lessons         DrivingLesson[]
-  abilities       Ability[]
+  permissions     Permission[]
 }
 
-model Ability {
+model Permission {
   id          String @id @default(uuid())
   displayName String
   value       String @unique
@@ -95,17 +99,20 @@ model Ability {
 }
 
 model StudentData {
-  userId        String        @id
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  instructorId  String?
-  trainingBegin String?
-  trainingEnd   String?
-  trainingClass String
-  dateOfBirth   String
-  pickupLat     Float?
-  pickupLng     Float?
-  waitingTime   Float
-  trainingPhase TrainingPhase
+  userId         String        @id
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instructorId   String?
+  trainingBegin  String?
+  trainingEnd    String?
+  licenseClassId String
+  licenseClass   LicenseClass  @relation(fields: [licenseClassId], references: [id], onDelete: Cascade)
+  dateOfBirth    String
+  lessonTypeId   String?
+  lessonType     LessonType?   @relation(fields: [lessonTypeId], references: [id], onDelete: Cascade)
+  pickupLat      Float?
+  pickupLng      Float?
+  waitingTime    Float
+  trainingPhase  TrainingPhase
 }
 
 model InstructorData {

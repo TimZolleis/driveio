@@ -43,7 +43,6 @@ import { checkInstructorLimits } from '~/utils/user/instructor/verify-instructor
 import { bookingConfig } from '~/config/bookingConfig';
 import { checkStudentLimits } from '~/utils/user/student/verify-student-limits-server';
 
-//TODO: Maybe put in separate function and use defer
 export const loader = async ({ request }: DataFunctionArgs) => {
     const user = await requireRole(request, ROLE.STUDENT);
     const disabledDays = await getDisabledDays(bookingConfig.start, bookingConfig.end);

@@ -6,23 +6,41 @@ import {
     CommandItem,
     CommandList,
 } from '~/components/ui/Command';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { BingMapsLocation } from '~/types/bing-maps-location';
+import type { DebouncedFetcher } from '~/utils/form/debounce-fetcher';
+import { Label } from '~/components/ui/Label';
+import * as React from 'react';
 
 export const AddressCombobox = ({
     results,
     onInput,
     defaultLocation,
+    autosave,
+    fetcher,
+    error,
 }: {
     results: BingMapsLocation[];
     onInput: (event: string) => void;
     defaultLocation?: BingMapsLocation;
+    autosave?: boolean;
+    fetcher?: DebouncedFetcher;
+    error?: string;
 }) => {
     const [searchValue, setSearchValue] = useState(defaultLocation?.address.formattedAddress || '');
     const [showResults, setShowResults] = useState(false);
     const [pickupLocation, setPickupLocation] = useState<BingMapsLocation | undefined>(
         defaultLocation
     );
+    const inputRef = useRef<HTMLInputElement>(null);
+    const handleSelect = (location: BingMapsLocation) => {
+        setSearchValue(location.address.formattedAddress);
+        setPickupLocation(pickupLocation === location ? undefined : location);
+        setShowResults(false);
+        if (autosave && fetcher && inputRef.current) {
+            fetcher.debounceSubmit(inputRef.current.form, { replace: true, debounceTimeout: 500 });
+        }
+    };
 
     return (
         <div>
@@ -49,13 +67,7 @@ export const AddressCombobox = ({
                                     {results.map((location) => (
                                         <CommandItem
                                             onSelect={(value) => {
-                                                setSearchValue(location.address.formattedAddress);
-                                                setPickupLocation(
-                                                    pickupLocation === location
-                                                        ? undefined
-                                                        : location
-                                                );
-                                                setShowResults(false);
+                                                handleSelect(location);
                                             }}
                                             key={location.address.formattedAddress}>
                                             {location.address.formattedAddress}
@@ -67,7 +79,15 @@ export const AddressCombobox = ({
                     </div>
                 )}
             </Command>
-            <input type='hidden' name={'pickupLat'} value={pickupLocation?.point.coordinates[0]} />
+            <Label variant={'description'} color={'destructive'}>
+                {error}
+            </Label>
+            <input
+                ref={inputRef}
+                type='hidden'
+                name={'pickupLat'}
+                value={pickupLocation?.point.coordinates[0]}
+            />
             <input type='hidden' name={'pickupLng'} value={pickupLocation?.point.coordinates[1]} />
         </div>
     );

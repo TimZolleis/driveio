@@ -44,7 +44,6 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
     const overlappingGroups = getOverlappingAppointments(
         lessons.filter((lesson) => lesson.status !== LessonStatus.DECLINED)
     );
-    console.log(viewMode);
 
     return json({ lessons, overlappingGroups, viewMode });
 };

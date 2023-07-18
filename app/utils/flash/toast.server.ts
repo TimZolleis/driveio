@@ -1,6 +1,8 @@
 import { commitSession, getSession } from '~/utils/session/session.server';
+import type { User } from '.prisma/client';
+import { json } from '@remix-run/node';
 
-interface Toast {
+export interface Toast {
     title: string;
     description: string;
 }
@@ -20,4 +22,25 @@ export async function getToastMessage(request: Request) {
     const toastMessage = session.get('toast') as Toast | undefined;
     const header = await commitSession(session);
     return { toastMessage, header };
+}
+
+export async function sendSaveSuccessMessage(request: Request, type: string, user: User) {
+    return {
+        'Set-Cookie': await toastMessage(request, {
+            title: `${type} gespeichert`,
+            description: `${type} für ${user.firstName} ${user.lastName} erfolgreich gespeichert`,
+        }),
+    };
+}
+
+export async function sendJsonWithSuccessMessage<T extends Object>(
+    request: Request,
+    { title, description }: Toast,
+    data?: T
+) {
+    return json(data || {}, {
+        headers: {
+            'Set-Cookie': await toastMessage(request, { title, description }),
+        },
+    });
 }

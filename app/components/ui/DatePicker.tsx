@@ -7,24 +7,36 @@ import { Calendar } from '~/components/ui/Calendar';
 import { cn } from '~/utils/css';
 import { de } from 'date-fns/locale';
 import { Label } from '~/components/ui/Label';
+import type { DebouncedFetcher, useDebounceFetcher } from '~/utils/form/debounce-fetcher';
 
 export function DatePicker({
     name,
     defaultValue,
-    required,
     error,
+    autosave,
+    fetcher,
 }: {
     name?: string;
     defaultValue?: Date;
-    required?: boolean;
     error?: string;
+    autosave?: boolean;
+    fetcher?: DebouncedFetcher;
 }) {
     const [date, setDate] = React.useState<Date | undefined>(defaultValue);
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleSetDate = (date: Date | undefined) => {
+        setDate(date);
+        if (autosave && fetcher && inputRef.current) {
+            fetcher.debounceSubmit(inputRef.current.form, { replace: true, debounceTimeout: 500 });
+        }
+    };
 
     return (
         <div className={'w-full'}>
             <Popover>
                 <input
+                    ref={inputRef}
                     type={'hidden'}
                     name={name || 'date'}
                     value={date ? date.toISOString() : undefined}
@@ -45,7 +57,7 @@ export function DatePicker({
                         required
                         mode='single'
                         selected={date}
-                        onSelect={setDate}
+                        onSelect={handleSetDate}
                         initialFocus
                     />
                 </PopoverContent>

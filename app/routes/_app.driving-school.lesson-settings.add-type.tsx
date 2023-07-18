@@ -11,6 +11,7 @@ import { zfd } from 'zod-form-data';
 import { useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { Button, buttonVariants } from '~/components/ui/Button';
+import { findLastLessonType } from '~/models/lesson-type.server';
 
 export const meta: V2_MetaFunction = () => {
     return [{ title: 'New Remix App' }, { name: 'description', content: 'Welcome to Remix!' }];
@@ -32,14 +33,16 @@ export const action = async ({ request }: DataFunctionArgs) => {
     const formData = await request.formData();
     try {
         const { name, color } = addLessonTypeSchema.parse(formData);
+        const lastLessonType = await findLastLessonType();
         await prisma.lessonType.create({
             data: {
                 name,
                 color,
                 drivingSchoolId: user.drivingSchoolId,
+                index: lastLessonType ? lastLessonType.index + 1 : 0,
             },
         });
-        return redirect('/driving-school/lesson-types');
+        return redirect('/driving-school/lesson-settings');
     } catch (error) {
         return handleActionError(error);
     }

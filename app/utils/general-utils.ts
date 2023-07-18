@@ -2,6 +2,8 @@ import type { Params } from '@remix-run/react';
 import { ZodError } from 'zod';
 import { json, redirect, TypedResponse } from '@remix-run/node';
 import { errors } from '~/messages/errors';
+import type React from 'react';
+import { useState } from 'react';
 
 export function requireParameter(parameter: string, parameters: Params) {
     const value = parameters[parameter];
@@ -41,4 +43,53 @@ export function handleModalIntent(formData: FormData, redirectTo: string) {
         throw redirect(redirectTo);
     }
     return intent;
+}
+
+export function mergeHeaders(...headers: Array<ResponseInit['headers']>) {
+    const merged = new Headers();
+    for (const header of headers) {
+        for (const [key, value] of new Headers(header).entries()) {
+            merged.set(key, value);
+        }
+    }
+    return merged;
+}
+
+export function combineHeaders(...headers: Array<ResponseInit['headers']>) {
+    const combined = new Headers();
+    for (const header of headers) {
+        for (const [key, value] of new Headers(header).entries()) {
+            combined.append(key, value);
+        }
+    }
+    return combined;
+}
+function callAll<Args extends Array<unknown>>(
+    ...fns: Array<((...args: Args) => unknown) | undefined>
+) {
+    return (...args: Args) => fns.forEach((fn) => fn?.(...args));
+}
+
+export function useDoubleCheck() {
+    const [doubleCheck, setDoubleCheck] = useState(false);
+
+    function getButtonProps(props?: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+        const onBlur: React.ButtonHTMLAttributes<HTMLButtonElement>['onBlur'] = () =>
+            setDoubleCheck(false);
+
+        const onClick: React.ButtonHTMLAttributes<HTMLButtonElement>['onClick'] = doubleCheck
+            ? undefined
+            : (e) => {
+                  e.preventDefault();
+                  setDoubleCheck(true);
+              };
+
+        return {
+            ...props,
+            onBlur: callAll(onBlur, props?.onBlur),
+            onClick: callAll(onClick, props?.onClick),
+        };
+    }
+
+    return { doubleCheck, getButtonProps };
 }

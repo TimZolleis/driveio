@@ -12,7 +12,6 @@ interface InstructorDataFormProps {
 }
 
 export const InstructorDataForm = ({ instructorData, errors }: InstructorDataFormProps) => {
-    console.log(errors);
     return (
         <Form method={'post'}>
             <h4 className='font-medium'>Generell</h4>

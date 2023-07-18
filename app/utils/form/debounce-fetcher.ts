@@ -9,7 +9,7 @@ type SubmitTarget =
     | FormData
     | URLSearchParams
     | {
-          [name: string]: string;
+          [name: string]: string | string[];
       }
     | null;
 type DebounceSubmitFunction = (
@@ -19,6 +19,8 @@ type DebounceSubmitFunction = (
 type Required<Type, Key extends keyof Type> = Type & {
     [Property in Key]-?: Type[Property];
 };
+
+export type DebouncedFetcher = ReturnType<typeof useDebounceFetcher<any>>;
 
 export function useDebounceFetcher<T>() {
     const timeoutRef = useRef<NodeJS.Timeout>();

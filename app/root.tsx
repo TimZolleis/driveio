@@ -13,12 +13,16 @@ import {
 
 import stylesheet from '~/tailwind.css';
 import { getUser } from '~/utils/user/user.server';
+import type { Toast } from '~/utils/flash/toast.server';
 import { getToastMessage } from '~/utils/flash/toast.server';
-import { Toaster } from '~/components/ui/Toaster';
 import * as React from 'react';
 import { useEffect } from 'react';
 import { useToast } from '~/components/ui/use-toast';
 import { ErrorComponent } from '~/components/ui/ErrorComponent';
+import { commitSession, destroySession, getSession } from '~/utils/session/session.server';
+import { DateTime } from 'luxon';
+import { findUser } from '~/models/user.server';
+import { toast, Toaster } from 'sonner';
 
 export const links: LinksFunction = () => [{ rel: 'stylesheet', href: stylesheet }];
 
@@ -36,18 +40,37 @@ export const loader = async ({ request }: DataFunctionArgs) => {
             return redirect('/login');
         }
     }
-
-    const { header, toastMessage } = await getToastMessage(request);
-    return json({ user, toastMessage }, { headers: { 'Set-Cookie': header } });
+    const session = await getSession(request);
+    if (
+        !session.get('revalidateAt') ||
+        DateTime.fromISO(session.get('revalidateAt')) < DateTime.now()
+    ) {
+        const revalidatedUser = await findUser(user.id);
+        if (
+            !revalidatedUser ||
+            !revalidatedUser.enabled ||
+            user.password !== revalidatedUser.password
+        ) {
+            return redirect('/login', {
+                headers: {
+                    'Set-Cookie': await destroySession(request),
+                },
+            });
+        }
+        session.set('revalidateAt', DateTime.now().plus({ minutes: 30 }).toISO());
+        session.set('user', revalidatedUser);
+    }
+    const toastMessage = session.get('toast') as Toast | undefined;
+    const commitSessionHeader = await commitSession(session);
+    return json({ user, toastMessage }, { headers: { 'Set-Cookie': commitSessionHeader } });
 };
 
 export default function App() {
     const { toastMessage } = useLoaderData<typeof loader>();
-    const { toast } = useToast();
 
     useEffect(() => {
         if (toastMessage) {
-            toast(toastMessage);
+            toast(toastMessage.title, { description: toastMessage.description });
         }
     }, [toastMessage]);
 
@@ -60,7 +83,7 @@ export default function App() {
                 <Links />
             </head>
             <body>
-                <Toaster />
+                <Toaster closeButton={true} />
                 <Outlet />
                 <ScrollRestoration />
                 <Scripts />

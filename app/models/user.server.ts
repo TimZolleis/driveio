@@ -1,8 +1,9 @@
 import { prisma } from '../../prisma/db';
+import type { Prisma } from '.prisma/client';
 import { ROLE } from '.prisma/client';
 
-export async function findUser(userId: string | undefined) {
-    return prisma.user.findUnique({ where: { id: userId } });
+export async function findUser(userId: string | undefined, args?: Prisma.UserFindUniqueArgs) {
+    return prisma.user.findUnique({ where: { id: userId }, include: { permissions: true } });
 }
 
 export async function findUserByEmail(email: string) {

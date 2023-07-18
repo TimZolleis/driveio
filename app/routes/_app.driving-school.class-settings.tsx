@@ -1,7 +1,7 @@
 import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { requireRole } from '~/utils/user/user.server';
-import { Form, Link, Outlet, useFetcher, useLoaderData } from '@remix-run/react';
+import { useLoaderData } from '@remix-run/react';
 import { Separator } from '~/components/ui/Seperator';
 import { findDrivingSchool } from '~/models/driving-school.server';
 import type { LessonType, LessonTypeLicenseClass, LicenseClass } from '.prisma/client';
@@ -11,12 +11,11 @@ import { handleActionError } from '~/utils/general-utils';
 import { Label } from '~/components/ui/Label';
 import { Input } from '~/components/ui/Input';
 import { zfd } from 'zod-form-data';
-import { Plus, X } from 'lucide-react';
-import { buttonVariants } from '~/components/ui/Button';
-import { changeHexOpacity, cn } from '~/utils/css';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/Card';
 import { useDebounceFetcher } from '~/utils/form/debounce-fetcher';
+import { sendJsonWithSuccessMessage } from '~/utils/flash/toast.server';
+import { findLicenseClass } from '~/models/license-class.server';
 
 export const meta: V2_MetaFunction = () => {
     return [{ title: 'New Remix App' }, { name: 'description', content: 'Welcome to Remix!' }];
@@ -58,7 +57,7 @@ export const action = async ({ request }: DataFunctionArgs) => {
     try {
         const { licenseClassId, lessonTypeId, minimumDrives } =
             addClassSettingsSchema.parse(formData);
-        await prisma.lessonTypeLicenseClass.upsert({
+        const updated = await prisma.lessonTypeLicenseClass.upsert({
             where: {
                 licenseClassId_lessonTypeId: {
                     licenseClassId,
@@ -68,8 +67,12 @@ export const action = async ({ request }: DataFunctionArgs) => {
             create: { licenseClassId, lessonTypeId, minimumDrives: parseInt(minimumDrives) },
             update: { minimumDrives: parseInt(minimumDrives) },
         });
+        const licenseClass = await findLicenseClass(updated.licenseClassId);
 
-        return null;
+        return sendJsonWithSuccessMessage(request, {
+            title: 'Klasseneinstellungen gespeichert',
+            description: `Klasseneinstellungen für Klasse ${licenseClass?.name} gespeichert.`,
+        });
     } catch (error) {
         return handleActionError(error);
     }

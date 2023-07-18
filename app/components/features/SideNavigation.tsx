@@ -17,7 +17,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
             className={cn('flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1', className)}
             {...props}>
             {items.map(
-                (item) =>
+                (item, index) =>
                     item.show && (
                         <NavLink
                             key={item.href}
@@ -25,7 +25,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
                             to={item.href}
                             className={(active) =>
                                 cn(
-                                    buttonVariants({ variant: 'ghost' }),
+                                    buttonVariants({ variant: 'ghost', size: 'sm' }),
                                     active.isActive
                                         ? 'bg-muted hover:bg-muted'
                                         : 'hover:bg-transparent hover:underline',

@@ -2,11 +2,11 @@ import * as React from 'react';
 import { cn } from '~/utils/css';
 import { cva } from 'class-variance-authority';
 import { Label } from '~/components/ui/Label';
-import type { useDebounceFetcher } from '~/utils/form/debounce-fetcher';
+import type { DebouncedFetcher, useDebounceFetcher } from '~/utils/form/debounce-fetcher';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     autosave?: boolean;
-    fetcher?: ReturnType<any>;
+    fetcher?: DebouncedFetcher;
     error?: string;
 }
 

@@ -1,4 +1,4 @@
-import { User } from '.prisma/client';
+import type { User } from '.prisma/client';
 import { Input } from '~/components/ui/Input';
 import {
     Select,
@@ -8,79 +8,84 @@ import {
     SelectValue,
 } from '~/components/ui/Select';
 import { Button, buttonVariants } from '~/components/ui/Button';
-import { Form, Link } from '@remix-run/react';
+import { Form, Link, useFetcher } from '@remix-run/react';
 import { Label } from '~/components/ui/Label';
 import { FormDescription } from '~/components/ui/FormDescription';
+import login_ from '~/routes/login_';
+import { useDebounceFetcher } from '~/utils/form/debounce-fetcher';
+import { FormStatusIndicator } from '~/components/ui/FormStatusIndicator';
 
 interface UserFormProps {
-    user: User;
+    user?: User;
     errors?: {
         [key: string]: string[];
     };
 }
 
 export const UserForm = ({ user, errors }: UserFormProps) => {
+    const fetcher = useDebounceFetcher();
     return (
-        <Form method={'post'} className={'w-full'}>
-            <div className={'grid gap-3'}>
-                <div>
-                    <Label>Vorname</Label>
-                    <Input
-                        required
-                        name={'firstName'}
-                        defaultValue={user.firstName}
-                        placeholder={'Max'}
-                    />
+        <>
+            <fetcher.Form method={'post'}>
+                <FormStatusIndicator state={fetcher.state} position={'end'} />
+                <div className={'grid gap-3'}>
+                    <div>
+                        <Label>Vorname</Label>
+                        <Input
+                            fetcher={fetcher}
+                            autosave={true}
+                            required
+                            name={'firstName'}
+                            defaultValue={user?.firstName}
+                            placeholder={'Max'}
+                        />
+                    </div>
+                    <div>
+                        <Label>Nachname</Label>
+                        <Input
+                            fetcher={fetcher}
+                            autosave={true}
+                            required
+                            name={'lastName'}
+                            defaultValue={user?.lastName}
+                            placeholder={'Mustermann'}
+                        />
+                    </div>
+                    <div>
+                        <Label>Email</Label>
+                        <Input
+                            fetcher={fetcher}
+                            autosave={true}
+                            required
+                            name={'email'}
+                            placeholder={'max@mustermann.de'}
+                            defaultValue={user?.email}></Input>
+                        <p className={'text-destructive text-sm p-1'}>{errors?.email[0]}</p>
+                    </div>
+                    <div>
+                        <Label>Rolle</Label>
+                        <Select
+                            disabled={!!user}
+                            name={'role'}
+                            defaultValue={user?.role.toLowerCase()}
+                            autosave={true}
+                            fetcher={fetcher}>
+                            <SelectTrigger className='w-full'>
+                                <SelectValue placeholder='Rolle' />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value='student'>Fahrschüler</SelectItem>
+                                <SelectItem value='instructor'>Fahrlehrer</SelectItem>
+                                <SelectItem value='management'>Verwaltung</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Label variant={'description'}>
+                            Aus Sicherheitsgründen kann die Rolle eines Benutzers nicht mehr
+                            geändert werden.
+                        </Label>
+                    </div>
                 </div>
-                <div>
-                    <Label>Nachname</Label>
-                    <Input
-                        required
-                        name={'lastName'}
-                        defaultValue={user.lastName}
-                        placeholder={'Mustermann'}
-                    />
-                </div>
-                <div>
-                    <Label>Email</Label>
-                    <Input
-                        required
-                        name={'email'}
-                        placeholder={'max@mustermann.de'}
-                        defaultValue={user.email}></Input>
-                    <p className={'text-destructive text-sm p-1'}>{errors?.email[0]}</p>
-                </div>
-                <div>
-                    <Label>Rolle</Label>
-                    <Select name={'role'} defaultValue={user.role.toLowerCase()} disabled={true}>
-                        <SelectTrigger className='w-full'>
-                            <SelectValue placeholder='Rolle' />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value='student'>Fahrschüler</SelectItem>
-                            <SelectItem value='instructor'>Fahrlehrer</SelectItem>
-                            <SelectItem value='management'>Verwaltung</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Label variant={'description'}>
-                        Aus Sicherheitsgründen kann die Rolle eines Benutzers nicht mehr geändert
-                        werden.
-                    </Label>
-                </div>
-            </div>
-            <div className={'flex gap-3 justify-between mt-5'}>
-                <Link
-                    className={buttonVariants({ variant: 'destructive' })}
-                    to={`/users/${user.id}/delete`}>
-                    Benutzer löschen
-                </Link>
-                <div className={'flex justify-self-end gap-3'}>
-                    <Link to={`/users`} className={buttonVariants({ variant: 'outline' })}>
-                        Abbruch
-                    </Link>
-                    <Button variant={'brand'}>Speichern</Button>
-                </div>
-            </div>
-        </Form>
+            </fetcher.Form>
+        </>
     );
 };
