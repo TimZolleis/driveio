@@ -1,4 +1,4 @@
-import { Form, Link } from '@remix-run/react';
+import { Form, Link, useNavigation } from '@remix-run/react';
 import {
     Card,
     CardContent,
@@ -42,6 +42,7 @@ export const BlockedSlotForm = ({
         : undefined;
     const endDate = blockedSlot ? DateTime.fromISO(blockedSlot.endDate) : undefined;
     const endTime = endDate ? `${endDate?.toFormat('HH')}:${endDate.toFormat('mm')}` : undefined;
+    const navigation = useNavigation();
 
     return (
         <Form method={'post'}>
@@ -133,7 +134,7 @@ export const BlockedSlotForm = ({
                     <Link to={'..'} className={buttonVariants({ variant: 'outline' })}>
                         Abbrechen
                     </Link>
-                    <Button>Speichern</Button>
+                    <Button isLoading={navigation.state === 'submitting'}>Speichern</Button>
                 </CardFooter>
             </Card>
         </Form>

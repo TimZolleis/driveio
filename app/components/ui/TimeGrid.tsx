@@ -3,7 +3,7 @@ import React, { useRef, useState } from 'react';
 import { cn } from '~/utils/css';
 import { DateTime, Interval } from 'luxon';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useHourRange } from '~/utils/hooks/timegrid';
+import { getHourRange } from '~/utils/hooks/timegrid';
 import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import useMeasure from 'react-use-measure';
@@ -107,7 +107,7 @@ interface TimeGridGridProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const TimeGridGrid = React.forwardRef<HTMLDivElement, TimeGridGridProps>(
     ({ className, startingHour, endingHour, ...props }, ref) => {
-        const range = useHourRange(
+        const range = getHourRange(
             startingHour || timeGridConfig.startHour,
             endingHour || timeGridConfig.endHour
         );
@@ -138,7 +138,7 @@ interface TimeGridItemsProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Appointments = React.forwardRef<HTMLDivElement, TimeGridItemsProps>(
     ({ className, children, ...props }, ref) => {
-        const hours = useHourRange(timeGridConfig.startHour, timeGridConfig.endHour);
+        const hours = getHourRange(timeGridConfig.startHour, timeGridConfig.endHour);
         const rows = hours.length;
         return (
             <div

@@ -9,6 +9,7 @@ import { prisma } from '../../prisma/db';
 import { DateTime } from 'luxon';
 import { requireManagementPermissions } from '~/utils/user/user.server';
 import { BlockedSlotForm } from '~/components/features/blocked-slots/BlockedSlotForm';
+import { handleActionError } from '~/utils/general-utils';
 
 export const timeFormatSchema = z.string().regex(/^\d{2}:\d{2}$/, errors.form.invalidTime);
 
@@ -52,11 +53,7 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
         });
         return redirect(`/me/blocked-slots`);
     } catch (error) {
-        console.log(error);
-        if (error instanceof ZodError) {
-            return json({ formValidationErrors: error.formErrors.fieldErrors });
-        }
-        return json({ error: errors.unknown });
+        return handleActionError(error);
     }
 };
 

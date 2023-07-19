@@ -1,4 +1,5 @@
-import { ColumnDef, getCoreRowModel } from '@tanstack/table-core';
+import type { ColumnDef, SortingState } from '@tanstack/table-core';
+import { getCoreRowModel, getSortedRowModel } from '@tanstack/table-core';
 import { flexRender, useReactTable } from '@tanstack/react-table';
 import {
     Table,
@@ -8,6 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from '~/components/ui/Table';
+import { useState } from 'react';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -15,7 +17,15 @@ interface DataTableProps<TData, TValue> {
 }
 
 export const DataTable = <TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) => {
-    const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel() });
+    const [sorting, setSorting] = useState<SortingState>([]);
+    const table = useReactTable({
+        data,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+        onSortingChange: setSorting,
+        getSortedRowModel: getSortedRowModel(),
+        state: { sorting },
+    });
     return (
         <div className='rounded-md border'>
             <Table>

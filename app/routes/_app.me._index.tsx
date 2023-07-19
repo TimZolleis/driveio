@@ -134,9 +134,10 @@ const Me = () => {
                         <div className={'grid gap-2'}>
                             <Label>Telefonnummer</Label>
                             <Input
+                                defaultValue={databaseUser.phone ?? undefined}
                                 autosave={true}
                                 fetcher={fetcher}
-                                name={'phoneNumber'}
+                                name={'phone'}
                                 error={errors?.phone}></Input>
                         </div>
                     </div>

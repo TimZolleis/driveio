@@ -7,7 +7,7 @@ import useMeasure from 'react-use-measure';
 import { useIntervalDays } from '~/utils/luxon/interval';
 import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
-import { useHourRange } from '~/utils/hooks/timegrid';
+import { getHourRange } from '~/utils/hooks/timegrid';
 import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
 import {
     calculateDayColumn,
@@ -17,6 +17,7 @@ import {
 } from '~/components/ui/TimeGrid/utils';
 import { getOverlappingAppointmentGroups } from '~/utils/timegrid/appointment-utils';
 import { raise } from '~/utils/general-utils';
+import type { REPEAT } from '.prisma/client';
 
 export interface Appointment {
     appointmentId: string;
@@ -24,14 +25,15 @@ export interface Appointment {
     end: DateTime;
     name?: string;
     variant?: VariantProps<typeof appointmentVariants>['variant'];
+    repeat?: REPEAT;
 }
 
 const TimeGridTable = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
     ({ className, ...props }, ref) => (
-        <div className={'relative'}>
+        <div className={'relative '}>
             <table
                 ref={ref}
-                className={cn('w-full table-fixed rounded-md border-none', className)}
+                className={cn('w-full table-fixed rounded-md border-collapse', className)}
                 {...props}
             />
         </div>
@@ -42,14 +44,13 @@ TimeGridTable.displayName = 'TimeGridTable';
 
 interface TimeGridTableHeadProps extends React.HTMLAttributes<HTMLTableSectionElement> {
     interval: Interval;
+    hideDays?: boolean;
 }
 
 const TimeGridDayHeader = React.forwardRef<HTMLDivElement, TimeGridTableHeadProps>(
     ({ className, interval, ...props }, ref) => {
         return interval.splitBy({ day: 1 }).map((day) => (
-            <th
-                key={day.start?.weekday}
-                className={'border px-4 py-2 font-medium font-inter text-left'}>
+            <th key={day.start?.weekday} className={'px-4 py-2 font-medium font-inter text-left'}>
                 <p>{day.start?.toLocaleString({ weekday: 'short' })}</p>
                 <p className={'text-sm text-muted-foreground font-normal'}>
                     {day?.start?.toLocaleString(DateTime.DATE_FULL)}
@@ -61,11 +62,11 @@ const TimeGridDayHeader = React.forwardRef<HTMLDivElement, TimeGridTableHeadProp
 TimeGridDayHeader.displayName = 'TimeGridDayHeader';
 
 const TimeGridTableHead = React.forwardRef<HTMLTableSectionElement, TimeGridTableHeadProps>(
-    ({ className, interval, ...props }, ref) => (
+    ({ className, interval, hideDays, ...props }, ref) => (
         <thead ref={ref}>
             <tr>
                 <th className={'w-[60px]'}></th>
-                <TimeGridDayHeader interval={interval} />
+                {hideDays ? null : <TimeGridDayHeader interval={interval} />}
             </tr>
         </thead>
     )
@@ -78,17 +79,29 @@ interface TimeGridTableContentProps extends React.HTMLAttributes<HTMLTableRowEle
     startHour?: number;
     endHour?: number;
     onAppointmentClick?: (appointment: Appointment) => void;
+    hideCollisions?: boolean;
+    hideTime?: boolean;
 }
 
 const TimeGridTableContent = React.forwardRef<HTMLTableRowElement, TimeGridTableContentProps>(
     (
-        { className, interval, appointments, startHour, endHour, onAppointmentClick, ...props },
+        {
+            className,
+            interval,
+            appointments,
+            startHour,
+            endHour,
+            hideCollisions,
+            hideTime,
+            onAppointmentClick,
+            ...props
+        },
         ref
     ) => {
         const [tableBodyRef, tableBodyBounds] = useMeasure();
         const [appointmentContainerRef, appointmentContainerBounds] = useMeasure();
         const days = useIntervalDays(interval);
-        const hourRange = useHourRange(startHour || 6, endHour || 20);
+        const hourRange = getHourRange(startHour || 6, endHour || 20);
 
         return (
             <tbody className={'relative'} ref={tableBodyRef}>
@@ -156,8 +169,11 @@ const TimeGridTableContent = React.forwardRef<HTMLTableRowElement, TimeGridTable
                                             show={isInWeek(
                                                 interval,
                                                 appointment.start,
-                                                appointment.end
+                                                appointment.end,
+                                                appointment.repeat
                                             )}
+                                            hideTime={appointment.variant === 'disabled'}
+                                            hideCollision={hideCollisions}
                                             key={appointment.appointmentId}
                                             tableBodyBounds={tableBodyBounds}
                                             appointmentContainerBounds={appointmentContainerBounds}
@@ -192,11 +208,15 @@ interface TimeGridTableAppointmentProps
     overlapIndex?: number;
     overlapCount?: number;
     hourRange: DateTime[];
+    hideCollision?: boolean;
+    hideTime?: boolean;
 }
 
 const appointmentVariants = cva('absolute border h-full p-1 pointer-events-auto', {
     variants: {
         variant: {
+            available:
+                'bg-green-600/20 border-green-400 text-green-600 hover:bg-green-500/30 hover:cursor-pointer',
             default: 'border-indigo-300 bg-indigo-500/20 text-indigo-500 hover:bg-indigo-500/30',
             blocked: 'bg-gray-500/20 text-gray-500',
             error: 'bg-red-500/20 border-red-300 text-red-500',
@@ -226,6 +246,8 @@ const TimeGridTableAppointment = React.forwardRef<
             overlapCount,
             overlapIndex,
             show,
+            hideTime,
+            hideCollision,
             ...props
         },
         ref
@@ -258,13 +280,17 @@ const TimeGridTableAppointment = React.forwardRef<
                     }%)`,
                     height: calculateAppointmentHeight(),
                 }}
-                className={appointmentVariants({ variant: overlapCount ? 'overlaps' : variant })}
+                className={appointmentVariants({
+                    variant: overlapCount ? (hideCollision ? variant : 'overlaps') : variant,
+                })}
                 onClick={props.onClick}>
                 <p className={'font-semibold text-xs'}>{name || 'Termin'}</p>
-                <p className={'text-xs font-normal'}>
-                    {start.toLocaleString(DateTime.TIME_SIMPLE)} -{' '}
-                    {end.toLocaleString(DateTime.TIME_SIMPLE)}
-                </p>
+                {hideTime ? null : (
+                    <p className={'text-xs font-normal'}>
+                        {start.toLocaleString(DateTime.TIME_SIMPLE)} -{' '}
+                        {end.toLocaleString(DateTime.TIME_SIMPLE)}
+                    </p>
+                )}
             </div>
         );
     }
@@ -281,6 +307,8 @@ const TimeGridTableAppointmentSelector = React.forwardRef<
     HTMLTableRowElement,
     TimeGridTableAppointmentSelectorProps
 >(({ className, interval, hours, onAppointmentSelection, ...props }, ref) => {
+    const applyBorders = interval.splitBy({ day: 1 }).length > 1;
+
     return hours.map((date) => (
         <tr key={date.hour} className={cn('z-10', className)} ref={ref} {...props}>
             <td
@@ -301,7 +329,10 @@ const TimeGridTableAppointmentSelector = React.forwardRef<
                             )
                         }
                         key={day.start?.weekday}
-                        className='border h-[40px] hover:bg-gray-200 z-10'>
+                        className={cn(
+                            'h-[40px] hover:bg-gray-200 z-10',
+                            applyBorders ? 'border' : 'border-b border-t'
+                        )}>
                         <div className={'grid grid-rows-4 w-full h-full'}></div>
                     </td>
                 );

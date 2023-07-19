@@ -13,7 +13,7 @@ export const UserProfileCard = ({ user }: { user: User }) => {
             </div>
             <div className={'flex items-center gap-2'}>
                 <div className={'w-10 h-10 rounded-full flex items-center justify-center border'}>
-                    <Link to={`tel:${user.email}`}>
+                    <Link to={`tel:${user.phone}`}>
                         <Phone size={18} className={'text-gray-500 '}></Phone>
                     </Link>
                 </div>

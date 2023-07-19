@@ -75,6 +75,7 @@ model User {
   lastName        String
   password        String?
   email           String          @unique
+  phone           String?
   role            ROLE
   admin           Boolean
   setupComplete   Boolean         @default(false)
@@ -89,6 +90,7 @@ model User {
   blockedSlots    BlockedSlot[]
   lessons         DrivingLesson[]
   permissions     Permission[]
+  deleted         Boolean         @default(false)
 }
 
 model Permission {

@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { checkOverlap, filterBlockedSlots } from '~/utils/booking/calculate-available-slots.server';
 import { prisma } from '../../../prisma/db';
-import { findLessons } from '~/models/lesson.server';
+import { findInstructorLessons } from '~/models/lesson.server';
 
 interface CheckSlotProps {
     date: DateTime;
@@ -28,7 +28,7 @@ export async function checkBlockOverlap({ date, start, end, instructorId }: Chec
 }
 
 export async function checkBookingOverlap({ date, start, end, instructorId }: CheckSlotProps) {
-    const lessons = await findLessons({ instructorId, date });
+    const lessons = await findInstructorLessons({ instructorId, date });
     return lessons.some((lesson) => {
         const lessonStart = DateTime.fromISO(lesson.start);
         const lessonEnd = DateTime.fromISO(lesson.end);

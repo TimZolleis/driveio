@@ -1,4 +1,5 @@
-import { DataFunctionArgs, json, redirect } from '@remix-run/node';
+import type { DataFunctionArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { destroySession, getSession } from '~/utils/session/session.server';
 import { prisma } from '../../prisma/db';
 import { requireResult } from '~/utils/db/require-result.server';

@@ -6,7 +6,9 @@ export const Navigation = () => {
     const user = useOptionalUser();
     return (
         <nav
-            className={'w-full flex items-center justify-between px-5 py-2 border-b border-border'}>
+            className={
+                'w-full flex items-center justify-between px-5 py-2 border-b backdrop-blur-lg border-border fixed z-20 h-[50px]'
+            }>
             <div>
                 <Link to={'/'} className={'text-dodger-blue-700 font-semibold text-xl'}>
                     drive.io

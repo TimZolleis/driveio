@@ -99,7 +99,7 @@ const EditUserPermissionsPage = () => {
                                 <Checkbox
                                     disabled={user.admin}
                                     defaultChecked={
-                                        !!user.permissions.find(
+                                        !!user.permissions?.find(
                                             (userPermission) => userPermission.id === permission.id
                                         )
                                     }

@@ -7,7 +7,9 @@ import { requireManagementPermissions } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
 import { Label } from '~/components/ui/Label';
 import { BlockedSlotCard } from '~/components/features/blocked-slots/BlockedSlotCard';
-import { Card, CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
+import { Plus } from 'lucide-react';
+import { cn } from '~/utils/css';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireManagementPermissions(request);
@@ -79,12 +81,21 @@ const InstructorBlockedSlotsPage = () => {
 const NoBlockedSlots = () => {
     return (
         <Card className={'shadow-none'}>
-            <CardHeader>
-                <CardTitle>Keine Blockierungen vorhanden</CardTitle>
-                <CardDescription>
-                    Füge eine neue Blockierung hinzu, um diese hier anzuzeigen.
-                </CardDescription>
-            </CardHeader>
+            <CardContent className={'flex flex-col items-center w-full'}>
+                <img
+                    className={'max-w-[200px]'}
+                    src='https://illustrations.popsy.co/amber/late-for-meeting.svg'
+                    alt=''
+                />
+                <p className={'text-xl text-primary font-semibold'}>Keine blockierten Zeiträume</p>
+                <p className={'text-muted-foreground text-sm'}>
+                    Du hast hier noch keine blockierten Zeiträume.
+                </p>
+                <Link to={'add'} className={cn(buttonVariants(), 'mt-2')}>
+                    <Plus className={'w-4 h-4'}></Plus>
+                    <p>Hinzufügen</p>
+                </Link>
+            </CardContent>
         </Card>
     );
 };

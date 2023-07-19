@@ -12,7 +12,7 @@ import {
     TimeGridTableContent,
     TimeGridTableHead,
 } from '~/components/ui/TableTimeGrid';
-import { useHourRange } from '~/utils/hooks/timegrid';
+import { getHourRange } from '~/utils/hooks/timegrid';
 
 export const loader = async ({ request }: DataFunctionArgs) => {
     const user = await requireRole(request, ROLE.INSTRUCTOR);
@@ -81,7 +81,7 @@ const TimeGridPage = () => {
                 ]}>
                 <TimeGridTableAppointmentSelector
                     interval={interval}
-                    hours={useHourRange(7, 18)}
+                    hours={getHourRange(7, 18)}
                     onAppointmentSelection={() => console.log('Select')}
                 />
             </TimeGridTableContent>

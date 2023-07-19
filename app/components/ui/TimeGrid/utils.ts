@@ -1,6 +1,7 @@
 import type { DateTime } from 'luxon';
 import { Interval } from 'luxon';
 import type { Appointment } from '~/components/ui/TableTimeGrid';
+import type { REPEAT } from '.prisma/client';
 
 export const timeGridConfig = {
     startHour: 6,
@@ -25,9 +26,21 @@ export function calculateRows(start: DateTime, end: DateTime) {
     return { startRow, rowSpan };
 }
 
-export function isInWeek(interval: Interval, start: DateTime, end: DateTime) {
+export function isInWeek(interval: Interval, start: DateTime, end: DateTime, repeat?: REPEAT) {
     const startEndInterval = Interval.fromDateTimes(start, end);
-    return interval.overlaps(startEndInterval);
+    if (!repeat) {
+        interval.overlaps(startEndInterval);
+    }
+    if (repeat === 'YEARLY') {
+        return interval.start?.month === start.month;
+    }
+    if (repeat === 'MONTHLY') {
+        return interval.start?.day === start.day;
+    }
+    if (repeat === 'WEEKLY') {
+        return interval.start?.weekday === start.weekday;
+    }
+    return true;
 }
 
 export const calculateDayColumn = (days: DateTime[], day: DateTime) => {

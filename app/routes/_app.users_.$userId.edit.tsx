@@ -51,11 +51,7 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
         const intent = await formData.get('intent');
         if (intent === 'deleteUser') {
             const managementUser = await requireUserWithPermission(request, 'user.delete');
-            await prisma.user.delete({
-                where: {
-                    id: userId,
-                },
-            });
+            await prisma.user.softDelete(userId);
             return redirect('/users');
         }
         const managementUser = await requireUserWithPermission(request, 'user.edit');
@@ -80,6 +76,7 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
             }
         );
     } catch (error) {
+        console.log(error);
         return handleActionError(error);
     }
 };

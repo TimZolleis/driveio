@@ -17,6 +17,8 @@ import { Alert, AlertDescription, AlertTitle } from '~/components/ui/Alert';
 import { CircleBackslashIcon } from '@radix-ui/react-icons';
 import { buttonVariants } from '~/components/ui/Button';
 import { cn } from '~/utils/css';
+import { Card, CardContent } from '~/components/ui/Card';
+import { Plus } from 'lucide-react';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireUser(request);
@@ -94,10 +96,9 @@ const StudentIndexPage = () => {
                             {DateTime.now().endOf('week').toLocaleString(DateTime.DATE_MED)})
                         </p>
                     </div>
-                    <LessonViewOptions checked={checkedOptions} setChecked={changeChecked} />
                 </div>
-                {lessonsWithInstructor.length < 1 && <NoLessonCard />}
                 <div className={'grid gap-4 mt-4'}>
+                    {lessonsWithInstructor.length < 1 && <NoLessons />}
                     {lessonsWithInstructor
                         .sort((a, b) => a.lesson.start.localeCompare(b.lesson.start))
                         .map((lessonWithInstructor) => (
@@ -116,20 +117,25 @@ const StudentIndexPage = () => {
     );
 };
 
-const NoLessonCard = () => {
+const NoLessons = () => {
     return (
-        <div className={'py-4 max-w-xl w-full'}>
-            <Alert>
-                <CircleBackslashIcon className='h-4 w-4' />
-                <AlertTitle>Keine Fahrstunden gefunden</AlertTitle>
-                <AlertDescription>
-                    Du hast die nächsten zwei Wochen noch keine Fahrstunden gebucht.
-                </AlertDescription>
+        <Card className={'shadow-none'}>
+            <CardContent className={'flex flex-col items-center w-full'}>
+                <img
+                    className={'max-w-[200px]'}
+                    src='https://illustrations.popsy.co/amber/surreal-hourglass.svg'
+                    alt=''
+                />
+                <p className={'text-xl text-primary font-semibold'}>Keine Fahrstunden</p>
+                <p className={'text-muted-foreground text-sm'}>
+                    Du hast diese Woche noch keine Fahrstunden gebucht
+                </p>
                 <Link to={'/book'} className={cn(buttonVariants(), 'mt-2')}>
-                    Fahrstunden buchen
+                    <Plus className={'w-4 h-4'}></Plus>
+                    <p>Buchen</p>
                 </Link>
-            </Alert>
-        </div>
+            </CardContent>
+        </Card>
     );
 };
 

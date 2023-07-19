@@ -1,6 +1,6 @@
 import { DateTime, Interval } from 'luxon';
 import React from 'react';
-import { useHourRange } from '~/utils/hooks/timegrid';
+import { getHourRange } from '~/utils/hooks/timegrid';
 import { requireRole } from '~/utils/user/user.server';
 import { ROLE } from '.prisma/client';
 import { findWeeklyLessons } from '~/models/lesson.server';
@@ -43,7 +43,7 @@ const TimeGridPage = () => {
         DateTime.now().startOf('week'),
         DateTime.now().endOf('week')
     );
-    const range = useHourRange(6, 20);
+    const range = getHourRange(6, 20);
     const [tableRef, { width }] = useMeasure();
     const [appointmentRef, { height }] = useMeasure();
     const hourHeight = height / range.length;

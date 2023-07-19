@@ -1,5 +1,5 @@
-import { User } from '.prisma/client';
-import { ColumnDef } from '@tanstack/table-core';
+import type { ROLE, User } from '.prisma/client';
+import type { ColumnDef } from '@tanstack/table-core';
 import { DataTable } from '~/components/ui/DataTable';
 import {
     DropdownMenu,
@@ -10,31 +10,74 @@ import {
     DropdownMenuTrigger,
 } from '~/components/ui/Dropdown';
 import { Button } from '~/components/ui/Button';
-import { MoreHorizontal, Search } from 'lucide-react';
-import { Link } from '@remix-run/react';
+import { ArrowUpDown, MoreHorizontal, Search } from 'lucide-react';
+import { Form, Link } from '@remix-run/react';
 import { roles } from '~/messages/roles';
 import { Badge } from '~/components/ui/Badge';
 import { Input } from '~/components/ui/Input';
 import { useState } from 'react';
+import { useDoubleCheck } from '~/utils/general-utils';
 
 export const columns: ColumnDef<User>[] = [
     {
         accessorKey: 'firstName',
-        header: 'Vorname',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant='invisible'
+                    size={'invisible'}
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                    Vorname
+                    <ArrowUpDown className=' h-4 w-4' />
+                </Button>
+            );
+        },
     },
     {
         accessorKey: 'lastName',
-        header: 'Nachname',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant='invisible'
+                    size={'invisible'}
+                    className={'p-0'}
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                    Nachname
+                    <ArrowUpDown className=' h-4 w-4' />
+                </Button>
+            );
+        },
     },
     {
         accessorKey: 'email',
-        header: 'E-Mail',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant='invisible'
+                    size={'invisible'}
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                    Email
+                    <ArrowUpDown className='h-4 w-4' />
+                </Button>
+            );
+        },
     },
     {
         accessorKey: 'role',
-        header: 'Rolle',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant='invisible'
+                    size={'invisible'}
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                    Rolle
+                    <ArrowUpDown className=' h-4 w-4' />
+                </Button>
+            );
+        },
         cell: ({ row }) => {
-            return <Badge>{roles[row.original.role]}</Badge>;
+            const roleKey = row.original.role.toLowerCase() as Lowercase<ROLE>;
+            return <Badge variant={roleKey}>{roles[row.original.role]}</Badge>;
         },
     },
     {
@@ -53,22 +96,6 @@ export const columns: ColumnDef<User>[] = [
                         <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
                         <Link className={'hover:cursor-pointer'} to={`/users/${user.id}/edit`}>
                             <DropdownMenuItem>Benutzer bearbeiten</DropdownMenuItem>
-                        </Link>
-                        {user.role === 'STUDENT' && (
-                            <Link className={'hover:cursor-pointer'} to={`/users/${user.id}/data`}>
-                                <DropdownMenuItem>Stammdaten bearbeiten</DropdownMenuItem>
-                            </Link>
-                        )}
-                        <DropdownMenuSeparator />
-                        {user.role === 'STUDENT' && (
-                            <Link
-                                className={'text-amber-500'}
-                                to={`/users/${user.id}/end-training`}>
-                                <DropdownMenuItem>Ausbildung beenden</DropdownMenuItem>
-                            </Link>
-                        )}
-                        <Link className={'text-destructive'} to={`/users/${user.id}/delete`}>
-                            <DropdownMenuItem>Benutzer löschen</DropdownMenuItem>
                         </Link>
                     </DropdownMenuContent>
                 </DropdownMenu>

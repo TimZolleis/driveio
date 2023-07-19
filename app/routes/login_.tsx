@@ -34,6 +34,12 @@ export const loader = async ({ request }: DataFunctionArgs) => {
     }
     const email = getQuery(request, 'email');
     const foundUser = email ? await findUserByEmail(email) : undefined;
+    if (!foundUser) {
+        return json({
+            isValidUser: false,
+            formValidationErrors: { email: [errors.login.email.invalid] },
+        });
+    }
     const session = await getSession(request);
     if (email) {
         session.flash('loginEmail', email);
@@ -78,7 +84,8 @@ const LoginPage = () => {
     const navigation = useNavigation();
     return (
         <main className={'min-h-screen w-full'}>
-            <div
+            <motion.div
+                layout
                 className={'h-screen container w-screen flex flex-col items-center justify-center'}>
                 <h1 className={'text-2xl font-semibold tracking-tight'}>Anmeldung</h1>
                 <p className={'text-sm text-muted-foreground'}>
@@ -95,9 +102,6 @@ const LoginPage = () => {
                     {!isValidUser && (
                         <>
                             <Button isLoading={fetcher.state === 'submitting'}>Weiter</Button>
-                            <Label variant={'description'} color={'destructive'}>
-                                {errors.login.email.invalid}
-                            </Label>
                         </>
                     )}
                 </fetcher.Form>
@@ -125,7 +129,7 @@ const LoginPage = () => {
                     to={'/register'}>
                     Du hast einen Einladungscode? Registrieren
                 </Link>
-            </div>
+            </motion.div>
         </main>
     );
 };

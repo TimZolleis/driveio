@@ -8,7 +8,7 @@ const pageHeaderVariants = cva('text-primary', {
     variants: {
         variant: {
             xl: 'text-2xl font-semibold',
-            lg: 'text-lg font-medium',
+            lg: 'text-lg font-semibold',
         },
     },
     defaultVariants: {

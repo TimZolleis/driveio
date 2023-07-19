@@ -18,7 +18,7 @@ import {
     TimeGridTableContent,
     TimeGridTableHead,
 } from '~/components/ui/TableTimeGrid';
-import { useHourRange } from '~/utils/hooks/timegrid';
+import { getHourRange } from '~/utils/hooks/timegrid';
 import { useNavigate } from 'react-router';
 import { commitSession, getSession } from '~/utils/session/session.server';
 
@@ -130,7 +130,7 @@ const LessonOverviewPage = () => {
                         }>
                         <TimeGridTableAppointmentSelector
                             interval={interval}
-                            hours={useHourRange(6, 20)}
+                            hours={getHourRange(6, 20)}
                             onAppointmentSelection={(date, time) =>
                                 navigate(
                                     `add?time=${encodeURIComponent(time)}&date=${encodeURIComponent(

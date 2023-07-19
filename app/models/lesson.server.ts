@@ -8,13 +8,11 @@ export async function findLesson(lessonId: string) {
     return prisma.drivingLesson.findUnique({ where: { id: lessonId }, include: { student: true } });
 }
 
-export async function findLessons({
-    instructorId,
-    date,
-}: {
-    instructorId: string;
-    date: DateTime;
-}) {
+export async function findInstructorLessons(
+    instructorId: string,
+    date: DateTime,
+    status?: LessonStatus
+) {
     return prisma.drivingLesson.findMany({
         where: {
             instructorId,
@@ -22,7 +20,7 @@ export async function findLessons({
                 gte: date.startOf('day').toISO() ?? undefined,
                 lt: date.startOf('day').plus({ days: 1 }).toISO() ?? undefined,
             },
-            status: 'REQUESTED' || 'CONFIRMED',
+            status: status ? status : 'REQUESTED' || 'CONFIRMED',
         },
         include: {
             student: {
@@ -64,8 +62,8 @@ export async function findStudentLessons(studentId: string, date: DateTime) {
         where: {
             userId: studentId,
             start: {
-                gte: date.startOf('day').toISO() ?? undefined,
-                lt: date.startOf('day').plus({ day: 1 }).toISO() ?? undefined,
+                gte: date.startOf('week').toISO() ?? undefined,
+                lte: date.endOf('week').toISO() ?? undefined,
             },
             status: 'REQUESTED' || 'CONFIRMED',
         },
