@@ -44,10 +44,12 @@ export const errors = {
         noStudentData:
             'Die Einrichtung deines Kontos ist noch nicht abgeschlossen. Bis dahin können keine Fahrstunden gebucht werden. Bitte wende dich an deinen Fahrlehrer, um die Einrichtung abzuschließen.',
         noInstructor: 'Du hast noch keinen zugewiesenen Fahrlehrer.',
+        limitExceeded: 'Du hast diese Woche bereits die maximale Anzahl an Fahrstunden gebucht.',
     },
     instructor: {
         noInstructorData:
             'Das Konto deines Fahrlehrers ist noch nicht vollständig eingerichtet. Bitte wende dich an deinen Fahrlehrer, um ihn auf diesen Fehler hinzuweisen.',
+        limitExceeded: 'Dein Fahrlehrer hat heute leider keine Fahrstunden mehr.',
     },
     slot: {
         overbooked: 'Dieser Termin ist leider schon belegt. Bitte versuche einen anderen Termin.',

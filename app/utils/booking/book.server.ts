@@ -20,7 +20,6 @@ export async function verifyParameters(request: Request, disabled?: string[]) {
     const duration = getQuery(request, 'duration');
     if (!duration) {
         url.searchParams.set('duration', '90');
-        url.searchParams.set('selectDuration', 'true');
         throw redirect(url.toString());
     }
     return {

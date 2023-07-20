@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { cn } from '~/utils/css';
+import { motion } from 'framer-motion';
 
 const Popover = PopoverPrimitive.Root;
 
@@ -12,6 +13,7 @@ const PopoverContent = React.forwardRef<
 >(({ className, align = 'center', sideOffset = 4, ...props }, ref) => (
     <PopoverPrimitive.Portal>
         <PopoverPrimitive.Content
+            asChild={true}
             ref={ref}
             align={align}
             sideOffset={sideOffset}
@@ -19,8 +21,17 @@ const PopoverContent = React.forwardRef<
                 'z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none animate-in data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
                 className
             )}
-            {...props}
-        />
+            {...props}>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', duration: 0.3 }}
+                className={
+                    'z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none animate-in data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2'
+                }>
+                {props.children}
+            </motion.div>
+        </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
 ));
 PopoverContent.displayName = PopoverPrimitive.Content.displayName;

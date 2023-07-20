@@ -18,6 +18,7 @@ import {
 import { getOverlappingAppointmentGroups } from '~/utils/timegrid/appointment-utils';
 import { raise } from '~/utils/general-utils';
 import type { REPEAT } from '.prisma/client';
+import { motion } from 'framer-motion';
 
 export interface Appointment {
     appointmentId: string;
@@ -83,6 +84,18 @@ interface TimeGridTableContentProps extends React.HTMLAttributes<HTMLTableRowEle
     hideTime?: boolean;
 }
 
+const appointmentContainerVariants = {
+    hidden: {
+        opacity: 0,
+    },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.05,
+        },
+    },
+};
+
 const TimeGridTableContent = React.forwardRef<HTMLTableRowElement, TimeGridTableContentProps>(
     (
         {
@@ -120,7 +133,10 @@ const TimeGridTableContent = React.forwardRef<HTMLTableRowElement, TimeGridTable
                         const overlapping = getOverlappingAppointments(appointments);
                         const overlappingGroups = getOverlappingAppointmentGroups(overlapping);
                         return (
-                            <td
+                            <motion.td
+                                variants={appointmentContainerVariants}
+                                initial={'hidden'}
+                                animate={'visible'}
                                 key={day.day}
                                 className={'relative m-0 p-0'}
                                 style={{ gridColumnStart: calculateDayColumn(days, day) }}>
@@ -187,7 +203,7 @@ const TimeGridTableContent = React.forwardRef<HTMLTableRowElement, TimeGridTable
                                         />
                                     );
                                 })}
-                            </td>
+                            </motion.td>
                         );
                     })}
                 </tr>
@@ -228,6 +244,16 @@ const appointmentVariants = cva('absolute border h-full p-1 pointer-events-auto'
         variant: 'default',
     },
 });
+
+const appointmentAnimationVariants = {
+    hidden: {
+        opacity: 0,
+    },
+    visible: {
+        opacity: 1,
+        scale: 1,
+    },
+};
 
 const TimeGridTableAppointment = React.forwardRef<
     HTMLTableSectionElement,
@@ -272,12 +298,12 @@ const TimeGridTableAppointment = React.forwardRef<
         }
 
         return (
-            <div
+            <motion.div
+                variants={appointmentAnimationVariants}
                 style={{
                     width: overlapCount ? `${100 / overlapCount}%` : '100%',
-                    transform: `translateY(${calculateAppointmentOffset()}px) translateX(${
-                        overlapIndex ? overlapIndex * 100 : 0
-                    }%)`,
+                    y: `${calculateAppointmentOffset()}px`,
+                    x: `${overlapIndex ? overlapIndex * 100 : 0}%`,
                     height: calculateAppointmentHeight(),
                 }}
                 className={appointmentVariants({
@@ -291,7 +317,7 @@ const TimeGridTableAppointment = React.forwardRef<
                         {end.toLocaleString(DateTime.TIME_SIMPLE)}
                     </p>
                 )}
-            </div>
+            </motion.div>
         );
     }
 );

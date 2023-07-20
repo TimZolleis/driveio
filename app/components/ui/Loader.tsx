@@ -42,3 +42,25 @@ export const Loader = ({ size = 30, className }: { size?: number; className?: st
         </div>
     );
 };
+
+export const CSSLoader = ({ size = 30 }: { size?: number }) => {
+    return (
+        <div style={{ height: `${size}px`, width: `${size}px` }}>
+            <div
+                className={'relative top-1/2 left-1/2'}
+                style={{ height: `${size}px`, width: `${size}px` }}>
+                {bars.map((_, i) => (
+                    <div
+                        key={i}
+                        className={cn(
+                            'bg-gray-600 absolute h-[8%] -left-[10%] -top-[3.9%] w-[24%] animate-spinner-loading-bar'
+                        )}
+                        style={{
+                            transform: `rotate(${(i + 1) * 30}deg) translate(146%)`,
+                            animationDelay: `-${(bars.length - 1) * i * 0.1}s`,
+                        }}></div>
+                ))}
+            </div>
+        </div>
+    );
+};
