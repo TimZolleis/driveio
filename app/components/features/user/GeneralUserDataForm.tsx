@@ -10,8 +10,10 @@ import {
 import { Button, buttonVariants } from '~/components/ui/Button';
 import type { User } from '.prisma/client';
 import { ROLE } from '.prisma/client';
-import type { ValidationErrorActionData } from '~/types/general-types';
+import type { ValidationErrorActionData, ValidationErrors } from '~/types/general-types';
+import { transformErrors } from '~/utils/general-utils';
 
+//TODO: Add schema to forms, not actions
 export const GeneralUserDataForm = ({
     user,
     action,
@@ -21,7 +23,7 @@ export const GeneralUserDataForm = ({
     user?: User | null;
     action?: string;
     className?: string;
-    errors?: ValidationErrorActionData;
+    errors?: ValidationErrors;
 }) => {
     return (
         <Form method={'post'} action={action} className={className}>

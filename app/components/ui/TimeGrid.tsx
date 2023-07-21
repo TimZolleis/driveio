@@ -39,18 +39,14 @@ const TimeGridContent = React.forwardRef<HTMLDivElement, TimeGridContentProps>(
             state.startDateTime.startOf('week'),
             state.startDateTime.endOf('week')
         );
-        const onIncrease = () => {
-            state.increase();
-        };
-        const onDecrease = () => {
-            state.decrease();
-        };
         const [gridRef, { height }] = useMeasure();
 
         return (
             <div ref={ref} className={cn('relative overflow-hidden', className)} {...props}>
                 <div className={'grid grid-cols-7 pl-24 w-full'}>
-                    <Days interval={currentWeek} />
+                    <>
+                        <Days interval={currentWeek} />
+                    </>
                 </div>
                 <Appointments style={{ height }}>{children}</Appointments>
                 <TimeGridGrid ref={gridRef} />

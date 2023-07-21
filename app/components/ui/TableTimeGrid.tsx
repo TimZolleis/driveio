@@ -326,7 +326,7 @@ TimeGridTableAppointment.displayName = 'TimeGridTableAppointment';
 interface TimeGridTableAppointmentSelectorProps extends React.HTMLAttributes<HTMLTableRowElement> {
     interval: Interval;
     hours: DateTime[];
-    onAppointmentSelection: (day: string, time: string) => void;
+    onAppointmentSelection?: (day: string, time: string) => void;
 }
 
 const TimeGridTableAppointmentSelector = React.forwardRef<
@@ -347,6 +347,7 @@ const TimeGridTableAppointmentSelector = React.forwardRef<
                 return (
                     <td
                         onClick={() =>
+                            onAppointmentSelection &&
                             onAppointmentSelection(
                                 getSafeISOStringFromDateTime(
                                     day?.start ?? raise('Error in interval')

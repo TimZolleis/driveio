@@ -9,6 +9,7 @@ import { SidebarNav, TopNavigation } from '~/components/features/SideNavigation'
 import { requireUser } from '~/utils/user/user.server';
 import type { User } from '.prisma/client';
 import { PageHeader } from '~/components/ui/PageHeader';
+import { UserFormSkeleton } from '~/components/features/user/UserFormSkeleton';
 
 const sidebarNavItems = (user?: User) => [
     {

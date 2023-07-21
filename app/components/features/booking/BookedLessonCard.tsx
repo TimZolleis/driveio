@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { Link } from '@remix-run/react';
 import { LessonStatusBadge } from '~/components/features/lesson/LessonStatus';
 import { errors } from '~/messages/errors';
+import { Skeleton } from '~/components/features/user/UserFormSkeleton';
 
 interface EventData {
     summary: string;
@@ -66,7 +67,9 @@ export const BookedLessonCard = ({
                     )}
 
                     <div className={'flex justify-between items-center'}>
-                        <p className={'text-gray-400 text-sm'}>{lessonStart.toFormat('DD')}</p>
+                        <p className={'text-gray-400 text-sm'}>
+                            {lessonStart.toFormat('dd.MM.yyyy')}
+                        </p>
                         <LessonStatusBadge status={lesson.status}></LessonStatusBadge>
                     </div>
                     <div
@@ -101,6 +104,17 @@ export const BookedLessonCard = ({
                     <p className={'text-xs text-muted-foreground'}>{errors.lesson.expired}</p>
                 )}
             </div>
+        </>
+    );
+};
+
+export const LessonCardSkeleton = () => {
+    const cards = Array(4).fill(0);
+    return (
+        <>
+            {cards.map((_, i) => (
+                <Skeleton key={i} height={80} />
+            ))}
         </>
     );
 };

@@ -1,7 +1,14 @@
 import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
+import { defer, json, redirect } from '@remix-run/node';
 import { checkIfUserSetupComplete, getUser } from '~/utils/user/user.server';
-import { Outlet, useFetcher, useLoaderData, useSearchParams } from '@remix-run/react';
+import {
+    Await,
+    Outlet,
+    useFetcher,
+    useLoaderData,
+    useRouteLoaderData,
+    useSearchParams,
+} from '@remix-run/react';
 import { getDisabledDays } from '~/utils/booking/slot.server';
 import { bookingConfig } from '~/config/bookingConfig';
 import { DaySelector } from '~/components/features/booking/DaySelector';
@@ -10,46 +17,61 @@ import { getDaysInRange } from '~/utils/luxon/interval';
 import { DateTime } from 'luxon';
 import * as React from 'react';
 import { verifyParameters } from '~/utils/booking/book.server';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/Popover';
 import { Hourglass, TimerReset } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-export const meta: V2_MetaFunction = () => {
-    return [{ title: 'New Remix App' }, { name: 'description', content: 'Welcome to Remix!' }];
-};
-
+import uuid4 from 'uuid4';
+import { Skeleton } from '~/components/features/user/UserFormSkeleton';
 export const loader = async ({ request }: DataFunctionArgs) => {
-    const disabledDays = await getDisabledDays(bookingConfig.start, bookingConfig.end);
-    const parameters = await verifyParameters(request);
-    return json({ disabledDays, date: getSafeISOStringFromDateTime(parameters.date) });
+    const loaderId = uuid4();
+    console.time(`book-layout-loader-${loaderId}`);
+    const disabledDaysPromise = getDisabledDays(bookingConfig.start, bookingConfig.end);
+    console.timeEnd(`book-layout-loader-${loaderId}`);
+    return defer({ disabledDaysPromise });
 };
 
 const Index = () => {
-    const loaderData = useLoaderData<typeof loader>();
-    const date = loaderData.date;
-    const [selectedDate, setSelectedDate] = useState<DateTime>(DateTime.fromISO(date));
-    const disabledDateTimes = loaderData.disabledDays.map((date) => DateTime.fromISO(date));
+    const { disabledDaysPromise } = useLoaderData<typeof loader>();
     const [searchParams, setSearchParams] = useSearchParams();
+    const date = searchParams.get('date');
+    const [selectedDate, setSelectedDate] = useState<DateTime>(
+        date ? DateTime.fromISO(date) : DateTime.now()
+    );
+
     return (
         <>
             <div className={'flex flex-col items-center'}>
-                <div className={'flex gap-2 items-end w-full p-3 lg:max-w-sm'}>
-                    <DaySelector
-                        selected={selectedDate}
-                        onSelect={(day) => {
-                            searchParams.set('date', getSafeISOStringFromDateTime(day));
-                            setSearchParams(searchParams);
-                        }}
-                        availableDays={getDaysInRange(
-                            DateTime.now().plus({ day: 1 }),
-                            DateTime.now().endOf('week').plus({ week: 1 })
-                        ).filter((day) => {
-                            return !disabledDateTimes.some((disabledDateTime) => {
-                                return disabledDateTime.hasSame(day, 'day');
-                            });
-                        })}
-                    />
+                <div className={'flex gap-2 items-end justify-center w-full p-3 lg:max-w-sm'}>
+                    <Suspense fallback={<Skeleton height={20} />}>
+                        <Await resolve={disabledDaysPromise}>
+                            {(disabledDays) => {
+                                const disabledDateTimes = disabledDays.map((date) =>
+                                    DateTime.fromISO(date)
+                                );
+                                return (
+                                    <DaySelector
+                                        selected={selectedDate}
+                                        onSelect={(day) => {
+                                            searchParams.set(
+                                                'date',
+                                                getSafeISOStringFromDateTime(day)
+                                            );
+                                            setSearchParams(searchParams);
+                                        }}
+                                        availableDays={getDaysInRange(
+                                            DateTime.now().plus({ day: 1 }),
+                                            DateTime.now().endOf('week').plus({ week: 1 })
+                                        ).filter((day) => {
+                                            return !disabledDateTimes.some((disabledDateTime) => {
+                                                return disabledDateTime.hasSame(day, 'day');
+                                            });
+                                        })}
+                                    />
+                                );
+                            }}
+                        </Await>
+                    </Suspense>
                     <DurationSelector />
                 </div>
                 <Outlet />

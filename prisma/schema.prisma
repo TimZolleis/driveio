@@ -70,27 +70,28 @@ model Image {
 }
 
 model User {
-  id              String          @id @default(uuid())
-  firstName       String
-  lastName        String
-  password        String?
-  email           String          @unique
-  phone           String?
-  role            ROLE
-  admin           Boolean
-  setupComplete   Boolean         @default(false)
-  enabled         Boolean         @default(true)
-  registration    Registration?
-  profileImage    Image?
-  drivingSchool   DrivingSchool   @relation(fields: [drivingSchoolId], references: [id])
-  drivingSchoolId String
-  studentData     StudentData?
-  instructorData  InstructorData?
-  managementData  ManagementData?
-  blockedSlots    BlockedSlot[]
-  lessons         DrivingLesson[]
-  permissions     Permission[]
-  deleted         Boolean         @default(false)
+  id                 String          @id @default(uuid())
+  firstName          String
+  lastName           String
+  password           String?
+  email              String          @unique
+  phone              String?
+  role               ROLE
+  admin              Boolean
+  setupComplete      Boolean         @default(false)
+  enabled            Boolean         @default(true)
+  registration       Registration?
+  profileImage       Image?
+  drivingSchool      DrivingSchool   @relation(fields: [drivingSchoolId], references: [id])
+  drivingSchoolId    String
+  studentData        StudentData?
+  instructorData     InstructorData?
+  managementData     ManagementData?
+  blockedSlots       BlockedSlot[]
+  lessons            DrivingLesson[] @relation("studentDrivingLessons")
+  instructingLessons DrivingLesson[] @relation("instructorDrivingLessons")
+  permissions        Permission[]
+  deleted            Boolean         @default(false)
 }
 
 model Permission {
@@ -145,6 +146,7 @@ model BlockedSlot {
   endDate   String
   repeat    REPEAT
 }
+
 enum REPEAT {
   NEVER
   DAILY
@@ -175,14 +177,21 @@ enum ROLE {
 model DrivingLesson {
   id           String       @id @default(uuid())
   userId       String
-  student      User         @relation(fields: [userId], references: [id])
+  student      User         @relation(name: "studentDrivingLessons", fields: [userId], references: [id])
   instructorId String
+  instructor   User         @relation(name: "instructorDrivingLessons", fields: [instructorId], references: [id])
   start        String
   end          String
   status       LessonStatus
   cancelledBy  String?
   cancelledAt  String?
   description  String?
+}
+
+model Holiday {
+  id        String @id @default(cuid())
+  startDate String @unique
+  endDate   String @unique
 }
 
 enum LessonStatus {

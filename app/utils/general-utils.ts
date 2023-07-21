@@ -6,6 +6,9 @@ import type React from 'react';
 import { useState } from 'react';
 import type { SchemaValidationErrorActionData } from '~/types/general-types';
 import { toastMessage } from '~/utils/flash/toast.server';
+import { getSafeISODate, getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
+import { DateTime } from 'luxon';
+import type { User } from '.prisma/client';
 
 export function requireParameter(parameter: string, parameters: Params) {
     const value = parameters[parameter];
@@ -105,4 +108,25 @@ export function transformErrors<T>(
         transformedErrors[key as keyof typeof errors] = errors?.[key as keyof typeof errors]?.[0];
     });
     return transformedErrors;
+}
+
+export function getBookingLink() {
+    return `/book?duration=90&date=${encodeURIComponent(getSafeISODate(DateTime.now()))}`;
+}
+export function getGreeting(user: User) {
+    const hour = DateTime.now().hour;
+    let timeGreeting = 'Morgen';
+    const noon = hour >= 12 && hour < 14;
+    const afternoon = hour >= 14 && hour < 18;
+    const evening = hour >= 18;
+    if (noon) {
+        timeGreeting = 'Mittag';
+    }
+    if (afternoon) {
+        timeGreeting = 'Nachmittag';
+    }
+    if (evening) {
+        timeGreeting = 'Abend';
+    }
+    return `Guten ${timeGreeting}, ${user.firstName}`;
 }

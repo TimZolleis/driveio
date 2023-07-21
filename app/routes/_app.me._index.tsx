@@ -1,8 +1,7 @@
 import type { DataFunctionArgs } from '@remix-run/node';
-import { json } from '@remix-run/node';
-import { Form, Outlet, useLoaderData } from '@remix-run/react';
+import { defer, json } from '@remix-run/node';
+import { Form, Outlet, useLoaderData, Await } from '@remix-run/react';
 import { Suspense } from 'react';
-import { Await } from 'react-router';
 import { getFullName } from '~/utils/hooks/user';
 import { Separator } from '~/components/ui/Seperator';
 import { SidebarNav, TopNavigation } from '~/components/features/SideNavigation';
@@ -27,6 +26,7 @@ import { findUser } from '~/models/user.server';
 import { requireResult } from '~/utils/db/require-result.server';
 import { commitSession, getSession } from '~/utils/session/session.server';
 import { UserProfileCard } from '~/components/features/user/UserProfileCard';
+import { UserFormSkeleton } from '~/components/features/user/UserFormSkeleton';
 
 const sidebarNavItems = (user?: User) => [
     {
@@ -45,8 +45,8 @@ const editProfileSchema = zfd.formData({
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireUserWithPermission(request, 'profile.edit');
-    const databaseUser = await findUser(user.id).then(requireResult);
-    return json({ databaseUser });
+    const databaseUserPromise = findUser(user.id).then(requireResult);
+    return defer({ databaseUserPromise });
 };
 
 export const action = async ({ request, params }: DataFunctionArgs) => {
@@ -85,7 +85,7 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 };
 
 const Me = () => {
-    const { databaseUser } = useLoaderData<typeof loader>();
+    const { databaseUserPromise } = useLoaderData<typeof loader>();
     const fetcher =
         useDebounceFetcher<SchemaValidationErrorActionData<z.infer<typeof editProfileSchema>>>();
     const errors = fetcher.data?.formValidationErrors
@@ -101,50 +101,58 @@ const Me = () => {
                     </p>
                 </div>
                 <Separator className={'my-4'} />
-                <fetcher.Form method={'post'}>
-                    <FormStatusIndicator state={fetcher.state} position={'end'} />
-                    <div className={'grid grid-cols-2 gap-2'}>
-                        <div className={'grid gap-2'}>
-                            <Label>Vorname</Label>
-                            <Input
-                                autosave={true}
-                                fetcher={fetcher}
-                                defaultValue={databaseUser.firstName}
-                                name={'firstName'}
-                                error={errors?.firstName}></Input>
-                        </div>
-                        <div className={'grid gap-2'}>
-                            <Label>Nachname</Label>
-                            <Input
-                                autosave={true}
-                                fetcher={fetcher}
-                                defaultValue={databaseUser.lastName}
-                                name={'lastName'}
-                                error={errors?.lastName}></Input>
-                        </div>
-                        <div className={'grid gap-2'}>
-                            <Label>E-Mail</Label>
-                            <Input
-                                autosave={true}
-                                fetcher={fetcher}
-                                defaultValue={databaseUser.email}
-                                name={'email'}
-                                error={errors?.email}></Input>
-                        </div>
-                        <div className={'grid gap-2'}>
-                            <Label>Telefonnummer</Label>
-                            <Input
-                                defaultValue={databaseUser.phone ?? undefined}
-                                autosave={true}
-                                fetcher={fetcher}
-                                name={'phone'}
-                                error={errors?.phone}></Input>
-                        </div>
-                    </div>
-                </fetcher.Form>
-                <Separator className={'my-4'} />
-                <Label>Vorschau</Label>
-                <UserProfileCard user={databaseUser} />
+                <Suspense fallback={<UserFormSkeleton />}>
+                    <Await resolve={databaseUserPromise}>
+                        {(databaseUser) => (
+                            <>
+                                <fetcher.Form method={'post'}>
+                                    <FormStatusIndicator state={fetcher.state} position={'end'} />
+                                    <div className={'grid grid-cols-2 gap-2'}>
+                                        <div className={'grid gap-2'}>
+                                            <Label>Vorname</Label>
+                                            <Input
+                                                autosave={true}
+                                                fetcher={fetcher}
+                                                defaultValue={databaseUser.firstName}
+                                                name={'firstName'}
+                                                error={errors?.firstName}></Input>
+                                        </div>
+                                        <div className={'grid gap-2'}>
+                                            <Label>Nachname</Label>
+                                            <Input
+                                                autosave={true}
+                                                fetcher={fetcher}
+                                                defaultValue={databaseUser.lastName}
+                                                name={'lastName'}
+                                                error={errors?.lastName}></Input>
+                                        </div>
+                                        <div className={'grid gap-2'}>
+                                            <Label>E-Mail</Label>
+                                            <Input
+                                                autosave={true}
+                                                fetcher={fetcher}
+                                                defaultValue={databaseUser.email}
+                                                name={'email'}
+                                                error={errors?.email}></Input>
+                                        </div>
+                                        <div className={'grid gap-2'}>
+                                            <Label>Telefonnummer</Label>
+                                            <Input
+                                                defaultValue={databaseUser.phone ?? undefined}
+                                                autosave={true}
+                                                fetcher={fetcher}
+                                                name={'phone'}
+                                                error={errors?.phone}></Input>
+                                        </div>
+                                    </div>
+                                </fetcher.Form>
+                                <Separator className={'my-4'} />
+                                <Label>Vorschau</Label>
+                                <UserProfileCard user={databaseUser} />
+                            </>
+                        )}
+                    </Await>
+                </Suspense>
             </div>
         </>
     );

@@ -1,16 +1,25 @@
 import { DateTime, Interval } from 'luxon';
 import { raise } from '~/utils/general-utils';
-import { getPublicHolidays, parsePublicHolidays } from '~/utils/holidays/public-holidays.server';
+import {
+    getPublicHolidays,
+    getStoredHolidays,
+    parsePublicHolidays,
+} from '~/utils/holidays/public-holidays.server';
 import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
+import uuid4 from 'uuid4';
 
 export async function getDisabledDays(start: DateTime, end: DateTime) {
+    const timeId = uuid4();
+    console.time(`disabled-days-${timeId}`);
+
     const holidays = await getPublicHolidays(start, end)
-        .then((response) => parsePublicHolidays(response))
+        .then((holidays) => parsePublicHolidays(holidays))
         .then((result) => result.map((day) => getSafeISOStringFromDateTime(day)));
     const weekendDays = getWeekendDays(start, end).map((day) => getSafeISOStringFromDateTime(day));
     const unavailableDays = getUnavailableDays(start, end).map((day) =>
         getSafeISOStringFromDateTime(day)
     );
+    console.timeEnd(`disabled-days-${timeId}`);
     return [...holidays, ...weekendDays, ...unavailableDays];
 }
 

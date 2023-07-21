@@ -3,18 +3,16 @@ import { getSelectableDay } from '~/utils/luxon/get-selectable-day';
 import { getDisabledDays, isValidDate } from '~/utils/booking/slot.server';
 import { bookingConfig } from '~/config/bookingConfig';
 import { DateTime } from 'luxon';
-import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
+import { getSafeISODate, getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
 import { redirect } from '@remix-run/node';
 
-export async function verifyParameters(request: Request, disabled?: string[]) {
+export function verifyParameters(request: Request, disabledDays: string[]) {
     const url = new URL(request.url);
-    const disabledDays = await getDisabledDays(bookingConfig.start, bookingConfig.end).then(
-        (result) => result.map((day) => DateTime.fromISO(day))
-    );
     const date = getQuery(request, 'date');
-    const nextSelectableDay = getSelectableDay(disabledDays);
-    if (!date || !isValidDate(DateTime.fromISO(date), disabledDays)) {
-        url.searchParams.set('date', getSafeISOStringFromDateTime(nextSelectableDay));
+    const disabledDateTimes = disabledDays.map((day) => DateTime.fromISO(day));
+    const nextSelectableDay = getSelectableDay(disabledDateTimes);
+    if (!date || !isValidDate(DateTime.fromISO(date), disabledDateTimes)) {
+        url.searchParams.set('date', getSafeISODate(nextSelectableDay));
         throw redirect(url.toString());
     }
     const duration = getQuery(request, 'duration');

@@ -13,6 +13,7 @@ function getExtendedClient(client: PrismaClient) {
                 },
             },
             drivingLesson: {},
+            holiday: {},
         },
         query: {
             user: {

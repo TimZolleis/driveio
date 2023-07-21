@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react';
-import { Navigation } from '~/components/features/Navigation';
-import { Ban, Building2, List, Plus, Settings, UserCheck, Users } from 'lucide-react';
+import { Header } from '~/components/features/Header';
+import { Ban, Building2, List, LogOut, Plus, Settings, UserCheck, Users } from 'lucide-react';
 import { Separator } from '~/components/ui/Seperator';
 import { useOptionalUser } from '~/utils/hooks/user';
 import type { User } from '.prisma/client';
-import { Link } from '@remix-run/react';
+import { Form, Link } from '@remix-run/react';
 import { ROLE } from '.prisma/client';
 import { useState } from 'react';
 import { cn } from '~/utils/css';
+import { BottomNavigation } from '~/components/features/nav/BottomNavigation';
+import { getBookingLink } from '~/utils/general-utils';
 
 const instructorLinks = [
     {
@@ -39,7 +41,7 @@ const studentLinks = [
     },
     {
         name: 'Fahrstunden buchen',
-        href: '/book',
+        href: getBookingLink(),
         icon: <Plus className={'w-4 h-4'} />,
         requiredAdmin: false,
     },
@@ -74,14 +76,18 @@ export const AppLayout = ({ children, user }: { children: ReactNode; user?: User
 
     return (
         <main className={'font-inter text-base font-normal'}>
-            <Navigation />
-            <main className={'flex pt-[50px]'}>
+            <main className={'flex'}>
                 <div
                     className={cn(
-                        'fixed z-10 flex h-full w-full flex-col justify-between border-r border-stone-200 bg-stone-100 p-4 transition-all dark:border-stone-700 dark:bg-stone-900 sm:w-60 sm:translate-x-0 font-medium text-sm transform',
+                        'fixed z-10 flex h-full w-full flex-col border-r border-stone-200 bg-stone-100 p-4 transition-all dark:border-stone-700 dark:bg-stone-900 sm:w-60 sm:translate-x-0 font-medium text-sm transform',
                         showNavigation ? 'translate-x-0' : '-translate-x-full'
                     )}>
-                    <div>
+                    <Link
+                        to={'/'}
+                        className={'text-dodger-blue-700 font-semibold text-xl pb-2 pl-3'}>
+                        drive.io
+                    </Link>
+                    <div className={'h-full flex-col justify-between'}>
                         {user?.role === 'INSTRUCTOR' &&
                             instructorLinks.map((link) => (
                                 <SideBarLink key={link.href} to={link.href} icon={link.icon}>
@@ -108,7 +114,19 @@ export const AppLayout = ({ children, user }: { children: ReactNode; user?: User
                             )
                         )}
                     </div>
+                    <div className={'w-full border-t p-2 flex items-center justify-between'}>
+                        <div className={'flex items-center gap-1'}>
+                            <p>{user?.firstName}</p>
+                            <p>{user?.lastName}</p>
+                        </div>
+                        <Form method={'post'} action={'/logout'}>
+                            <button className={'rounded-full p-2 hover:bg-stone-200'}>
+                                <LogOut className={'h-5 w-5 text-stone-600'} />
+                            </button>
+                        </Form>
+                    </div>
                 </div>
+                {user?.role === ROLE.STUDENT && <BottomNavigation />}
                 <div className={cn('w-full', showNavigation ? 'pl-60 ' : 'sm:pl-60')}>
                     <div className={'px-5 w-full py-5'}>{children}</div>
                 </div>

@@ -31,6 +31,7 @@ import { errors } from '~/messages/errors';
 import { Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { CSSLoader, Loader } from '~/components/ui/Loader';
+import uuid4 from 'uuid4';
 
 async function getBigFatPromise(
     userId: string,
@@ -97,6 +98,9 @@ async function getBigFatPromise(
 
 //TODO: Put all this shit in a big promise and use defer
 export const loader = async ({ request }: DataFunctionArgs) => {
+    const loaderId = uuid4();
+    console.time(`book-layout-book-loader-${loaderId}`);
+
     /**
      * First, we require the permission to book a lesson
      */
@@ -105,14 +109,14 @@ export const loader = async ({ request }: DataFunctionArgs) => {
      * To save some DB queries, we check if the user has selected a duration
      */
     const disabledDays = await getDisabledDays(bookingConfig.start, bookingConfig.end);
-    const parameters = await verifyParameters(request, disabledDays);
+    const parameters = verifyParameters(request, disabledDays);
 
     /**
      * Now that we have a date and a duration, we can check the users and instructors' limits
      */
 
     //promise that resolves after 3 seconds
-
+    console.timeEnd(`book-layout-book-loader-${loaderId}`);
     const promise = getBigFatPromise(
         user.id,
         parameters.date,
@@ -126,7 +130,6 @@ const BookPage = () => {
     const { promise } = useLoaderData<typeof loader>();
     const navigate = useNavigate();
     const navigation = useNavigation();
-
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={'w-full'}>
             {navigation.state === 'idle' && (
@@ -207,9 +210,6 @@ const BookPage = () => {
                                                     <TimeGridTableAppointmentSelector
                                                         interval={interval}
                                                         hours={getHourRange(6, 20)}
-                                                        onAppointmentSelection={() =>
-                                                            console.log('Select')
-                                                        }
                                                     />
                                                 </TimeGridTableContent>
                                             </TimeGridTable>
@@ -231,7 +231,9 @@ const BookPage = () => {
                     </Await>
                 </Suspense>
             )}
-            {navigation.state === 'loading' && <LoadingAppointmentsContainer />}
+            {navigation.state === 'loading' && location.pathname.includes('book') && (
+                <LoadingAppointmentsContainer />
+            )}
         </motion.div>
     );
 };

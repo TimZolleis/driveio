@@ -2,7 +2,7 @@ import { useOptionalUser } from '~/utils/hooks/user';
 import { Link } from '@remix-run/react';
 import { UserMenu } from '~/components/features/user/UserMenu';
 
-export const Navigation = () => {
+export const Header = () => {
     const user = useOptionalUser();
     return (
         <nav
