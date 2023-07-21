@@ -1,7 +1,15 @@
 import type { DataFunctionArgs } from '@remix-run/node';
 import { defer, json, redirect } from '@remix-run/node';
 import * as React from 'react';
-import { Await, useLoaderData, useNavigation, useRouteError } from '@remix-run/react';
+import {
+    Await,
+    Form,
+    Outlet,
+    useActionData,
+    useLoaderData,
+    useNavigation,
+    useRouteError,
+} from '@remix-run/react';
 import { ErrorCard } from '~/components/ui/ErrorComponent';
 import { DateTime, Interval } from 'luxon';
 import { findAvailableSlots } from '~/utils/booking/calculate-available-slots.server';
@@ -13,6 +21,7 @@ import { bookingConfig } from '~/config/bookingConfig';
 import { requireUserWithPermission } from '~/utils/user/permissions.server';
 import {
     checkInstructorLimits,
+    checkSlotAvailability,
     checkStudentLimits,
     convertBlockedSlotToSlot,
     convertLessonToSlot,
@@ -47,6 +56,7 @@ import { findInstructorId } from '~/models/instructor.server';
 import { getQuery } from '~/utils/general-utils';
 import { requestLesson } from '~/models/lesson.server';
 import { toast } from 'sonner';
+import uuid4 from 'uuid4';
 
 type Slot = {
     start: string;
@@ -118,7 +128,6 @@ async function getBigFatPromise(
     };
 }
 
-//TODO: Put all this shit in a big promise and use defer
 export const loader = async ({ request }: DataFunctionArgs) => {
     const loaderId = uuid4();
     console.time(`book-layout-book-loader-${loaderId}`);

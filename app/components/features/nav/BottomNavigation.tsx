@@ -9,7 +9,7 @@ import { getBookingLink } from '~/utils/general-utils';
 const linkContainerVariants = cva('p-3 rounded-xl', {
     variants: {
         variant: {
-            active: 'bg-primary/20',
+            active: 'bg-primary/10',
         },
     },
 });
@@ -38,7 +38,7 @@ export const BottomNavigation = () => {
     return (
         <div
             className={
-                'flex sm:hidden w-full bg-white fixed bottom-0 border-t h-[88px] items-center justify-center gap-10 px-5'
+                'flex sm:hidden w-full bg-white fixed bottom-0 border-t h-[88px] items-center justify-evenly px-10'
             }>
             <NavLink to={'/student'}>
                 {({ isActive }) => (

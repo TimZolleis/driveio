@@ -1,27 +1,20 @@
 import type { DataFunctionArgs } from '@remix-run/node';
 import { defer, json } from '@remix-run/node';
-import { Form, Outlet, useLoaderData, Await } from '@remix-run/react';
+import { Await, useLoaderData } from '@remix-run/react';
 import { Suspense } from 'react';
-import { getFullName } from '~/utils/hooks/user';
 import { Separator } from '~/components/ui/Seperator';
-import { SidebarNav, TopNavigation } from '~/components/features/SideNavigation';
-import { requireUser } from '~/utils/user/user.server';
 import type { User } from '.prisma/client';
-import { PageHeader } from '~/components/ui/PageHeader';
-import { DrivingSchoolForm } from '~/components/features/driving-school/DrivingSchoolForm';
-import { Button } from '~/components/ui/Button';
+import { ROLE } from '.prisma/client';
 import { Label } from '~/components/ui/Label';
 import { Input } from '~/components/ui/Input';
 import { useDebounceFetcher } from '~/utils/form/debounce-fetcher';
 import { FormStatusIndicator } from '~/components/ui/FormStatusIndicator';
 import type { SchemaValidationErrorActionData } from '~/types/general-types';
-import { ValidationErrorActionData } from '~/types/general-types';
 import { zfd } from 'zod-form-data';
 import { z } from 'zod';
 import { handleActionError, transformErrors } from '~/utils/general-utils';
 import { requireUserWithPermission } from '~/utils/user/permissions.server';
 import { prisma } from '../../prisma/db';
-import { sendJsonWithSuccessMessage } from '~/utils/flash/toast.server';
 import { findUser } from '~/models/user.server';
 import { requireResult } from '~/utils/db/require-result.server';
 import { commitSession, getSession } from '~/utils/session/session.server';
@@ -107,7 +100,7 @@ const Me = () => {
                             <>
                                 <fetcher.Form method={'post'}>
                                     <FormStatusIndicator state={fetcher.state} position={'end'} />
-                                    <div className={'grid grid-cols-2 gap-2'}>
+                                    <div className={'grid md:grid-cols-2 gap-6 md:gap-x-2'}>
                                         <div className={'grid gap-2'}>
                                             <Label>Vorname</Label>
                                             <Input
@@ -146,9 +139,13 @@ const Me = () => {
                                         </div>
                                     </div>
                                 </fetcher.Form>
-                                <Separator className={'my-4'} />
-                                <Label>Vorschau</Label>
-                                <UserProfileCard user={databaseUser} />
+                                {databaseUser.role === ROLE.INSTRUCTOR && (
+                                    <>
+                                        <Separator className={'my-4'} />
+                                        <Label>Vorschau</Label>
+                                        <UserProfileCard user={databaseUser} />
+                                    </>
+                                )}
                             </>
                         )}
                     </Await>

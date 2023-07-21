@@ -15,8 +15,6 @@ interface NavProps {
     }[];
 }
 
-interface SidebarNavProps extends React.HTMLAttributes<HTMLElement>, NavProps {}
-
 interface TopNavProps extends React.ComponentProps<typeof TabsPrimitive.Root>, NavProps {}
 
 const topNavigationVariants = cva(

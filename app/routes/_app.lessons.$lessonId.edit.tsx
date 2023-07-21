@@ -12,7 +12,7 @@ import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import type { ValidationErrorActionData } from '~/types/general-types';
 import { EditLessonForm } from '~/components/features/lesson/EditLessonForm';
 import { handleActionError, handleModalIntent, requireParameter } from '~/utils/general-utils';
-import { declineLesson, findLesson } from '~/models/lesson.server';
+import { cancelLesson, findLesson } from '~/models/lesson.server';
 import { requireResult } from '~/utils/db/require-result.server';
 import { timeFormatSchema } from '~/routes/_app.me.blocked-slots.add';
 import { DateTime } from 'luxon';
@@ -42,9 +42,9 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
         const data = editLessonSchema.parse(formData);
         switch (intent) {
             case 'decline': {
-                await declineLesson({
+                await cancelLesson({
                     lessonId,
-                    cancelledById: user.id,
+                    userId: user.id,
                     description: data.description || null,
                 });
                 break;

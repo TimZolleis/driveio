@@ -87,6 +87,7 @@ export const AppLayout = ({ children, user }: { children: ReactNode; user?: User
                         className={'text-dodger-blue-700 font-semibold text-xl pb-2 pl-3'}>
                         drive.io
                     </Link>
+                    <Separator className={'mb-6'} />
                     <div className={'h-full flex-col justify-between'}>
                         {user?.role === 'INSTRUCTOR' &&
                             instructorLinks.map((link) => (
@@ -101,9 +102,7 @@ export const AppLayout = ({ children, user }: { children: ReactNode; user?: User
                                 </SideBarLink>
                             ))}
 
-                        <div className={'py-5'}>
-                            <Separator />
-                        </div>
+                        <Separator className={'my-6'} />
                         {profileLinks.map((link) =>
                             (link.requiredAdmin && !user?.admin) ||
                             !user ||

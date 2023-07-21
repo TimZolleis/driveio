@@ -97,13 +97,13 @@ export async function requestLesson({
     });
 }
 
-export async function declineLesson({
+export async function cancelLesson({
     lessonId,
-    cancelledById,
+    userId,
     description,
 }: {
     lessonId: DrivingLesson['id'];
-    cancelledById: string;
+    userId: string;
     description: DrivingLesson['description'];
 }) {
     return prisma.drivingLesson.update({
@@ -111,8 +111,12 @@ export async function declineLesson({
         data: {
             description,
             status: LessonStatus.DECLINED,
-            cancelledAt: getSafeISOStringFromDateTime(DateTime.now()),
-            cancelledBy: cancelledById,
+            lessonActions: {
+                create: {
+                    action: 'cancel',
+                    userId: userId,
+                },
+            },
         },
     });
 }

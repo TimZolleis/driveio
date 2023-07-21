@@ -1,27 +1,15 @@
 import type { DataFunctionArgs } from '@remix-run/node';
-import { defer, json } from '@remix-run/node';
+import { defer } from '@remix-run/node';
 import { requireUser } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
 import { DateTime } from 'luxon';
-import { Await, Link, Outlet, useLoaderData, useSearchParams } from '@remix-run/react';
+import { Await, Outlet, useLoaderData } from '@remix-run/react';
 import { Separator } from '~/components/ui/Seperator';
-import {
-    BookedLessonCard,
-    LessonCardSkeleton,
-} from '~/components/features/booking/BookedLessonCard';
-import { requireResult } from '~/utils/db/require-result.server';
-import { getGreeting, getQuery, raise } from '~/utils/general-utils';
+import { LessonCard, LessonCardSkeleton } from '~/components/features/booking/LessonCard';
+import { getGreeting, raise } from '~/utils/general-utils';
 import { errors } from '~/messages/errors';
 import { getLocationByCoordinates } from '~/utils/bing-maps';
-import type { LessonViewOption } from '~/components/features/booking/LessonViewOptions';
-import { LessonViewOptions } from '~/components/features/booking/LessonViewOptions';
-import { Suspense, useEffect, useState } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/Alert';
-import { CircleBackslashIcon } from '@radix-ui/react-icons';
-import { buttonVariants } from '~/components/ui/Button';
-import { cn } from '~/utils/css';
-import { Card, CardContent } from '~/components/ui/Card';
-import { Plus } from 'lucide-react';
+import { Suspense } from 'react';
 import { ErrorCard } from '~/components/ui/ErrorComponent';
 import { PageHeader } from '~/components/ui/PageHeader';
 
@@ -94,7 +82,7 @@ const StudentIndexPage = () => {
                                     {lessons
                                         .sort((a, b) => a.start.localeCompare(b.start))
                                         .map((lesson) => (
-                                            <BookedLessonCard
+                                            <LessonCard
                                                 key={lesson.id}
                                                 lesson={lesson}
                                                 instructor={lesson.instructor}

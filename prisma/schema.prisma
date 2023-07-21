@@ -92,6 +92,7 @@ model User {
   instructingLessons DrivingLesson[] @relation("instructorDrivingLessons")
   permissions        Permission[]
   deleted            Boolean         @default(false)
+  lessonActions      LessonAction[]
 }
 
 model Permission {
@@ -175,23 +176,27 @@ enum ROLE {
 }
 
 model DrivingLesson {
-  id           String       @id @default(uuid())
-  userId       String
-  student      User         @relation(name: "studentDrivingLessons", fields: [userId], references: [id])
-  instructorId String
-  instructor   User         @relation(name: "instructorDrivingLessons", fields: [instructorId], references: [id])
-  start        String
-  end          String
-  status       LessonStatus
-  cancelledBy  String?
-  cancelledAt  String?
-  description  String?
+  id            String         @id @default(uuid())
+  userId        String
+  student       User           @relation(name: "studentDrivingLessons", fields: [userId], references: [id])
+  instructorId  String
+  instructor    User           @relation(name: "instructorDrivingLessons", fields: [instructorId], references: [id])
+  start         String
+  end           String
+  status        LessonStatus
+  description   String?
+  lessonActions LessonAction[]
 }
 
-model Holiday {
-  id        String @id @default(cuid())
-  startDate String @unique
-  endDate   String @unique
+model LessonAction {
+  lessonId  String
+  lesson    DrivingLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  createdAt DateTime      @default(now())
+
+  @@id([lessonId, createdAt])
 }
 
 enum LessonStatus {
