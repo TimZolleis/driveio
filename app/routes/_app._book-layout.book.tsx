@@ -233,7 +233,13 @@ const BookPage = () => {
                     {navigation.state === 'idle' ? (
                         <Suspense fallback={<LoadingAppointmentsContainer />}>
                             <Await resolve={promise}>
-                                {({ isAllowedToBook, date, availableSlots, unavailableSlots }) => {
+                                {({
+                                    isAllowedToBook,
+                                    date,
+                                    availableSlots,
+                                    unavailableSlots,
+                                    remainingLessonsForStudent,
+                                }) => {
                                     const interval = Interval.fromDateTimes(
                                         DateTime.fromISO(date),
                                         DateTime.fromISO(date).plus({ day: 1 })
@@ -243,6 +249,13 @@ const BookPage = () => {
                                             className={
                                                 'flex flex-col items-end lg:items-start lg:flex-row gap-5 '
                                             }>
+                                            <p>
+                                                Du kannst diese Woche noch{' '}
+                                                <span className={'font-medium'}>
+                                                    {remainingLessonsForStudent}
+                                                </span>{' '}
+                                                Fahrstunden buchen.
+                                            </p>
                                             {isAllowedToBook && availableSlots.length > 0 && (
                                                 <div className={'p-4 rounded-md border'}>
                                                     {currentAppointment && (
