@@ -7,7 +7,7 @@ export const Navigation = () => {
     return (
         <nav
             className={
-                'w-full flex items-center justify-between px-5 py-2 border-b backdrop-blur-lg border-border fixed z-20 h-[50px]'
+                'w-full flex items-center justify-between px-5 py-2 border-b bg-white border-border fixed z-20 h-[50px] standalone:h-[100px]'
             }>
             <div>
                 <Link to={'/'} className={'text-dodger-blue-700 font-semibold text-xl'}>

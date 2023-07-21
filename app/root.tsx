@@ -20,11 +20,15 @@ import { useEffect } from 'react';
 import { useToast } from '~/components/ui/use-toast';
 import { ErrorComponent } from '~/components/ui/ErrorComponent';
 import { commitSession, destroySession, getSession } from '~/utils/session/session.server';
+import manifest from 'public/site.webmanifest';
 import { DateTime } from 'luxon';
 import { findUser } from '~/models/user.server';
 import { toast, Toaster } from 'sonner';
 
-export const links: LinksFunction = () => [{ rel: 'stylesheet', href: stylesheet }];
+export const links: LinksFunction = () => [
+    { rel: 'stylesheet', href: stylesheet },
+    { rel: 'manifest', href: manifest },
+];
 
 export const loader = async ({ request }: DataFunctionArgs) => {
     const user = await getUser(request);
@@ -86,6 +90,10 @@ export default function App() {
             <head>
                 <meta charSet='utf-8' />
                 <meta name='viewport' content='width=device-width,initial-scale=1' />
+                <meta
+                    name={'apple-mobile-web-app-status-bar-style'}
+                    content={'black-translucent'}
+                />
                 <Meta />
                 <Links />
             </head>

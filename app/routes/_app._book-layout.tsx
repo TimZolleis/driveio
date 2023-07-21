@@ -34,7 +34,7 @@ const Index = () => {
     return (
         <>
             <div className={'flex flex-col items-center'}>
-                <div className={'flex gap-2 items-end w-full p-3 lg:max-w-sm'}>
+                <div className={'flex gap-2 items-end justify-center w-full p-3 lg:max-w-sm'}>
                     <DaySelector
                         selected={selectedDate}
                         onSelect={(day) => {

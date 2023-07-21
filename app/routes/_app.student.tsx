@@ -19,6 +19,7 @@ import { buttonVariants } from '~/components/ui/Button';
 import { cn } from '~/utils/css';
 import { Card, CardContent } from '~/components/ui/Card';
 import { Plus } from 'lucide-react';
+import { PageHeader } from '~/components/ui/PageHeader';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireUser(request);
@@ -63,26 +64,6 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 const StudentIndexPage = () => {
     const { user, lessonsWithInstructor, studentData, pickupLocation } =
         useLoaderData<typeof loader>();
-    const [checkedOptions, setCheckedOptions] = useState<LessonViewOption[]>([]);
-    const [searchParams, setSearchParams] = useSearchParams();
-    const changeChecked = (option: LessonViewOption, isChecked: boolean) => {
-        if (!isChecked) {
-            setCheckedOptions(checkedOptions.filter((checkedOption) => checkedOption !== option));
-        } else setCheckedOptions([...checkedOptions, option]);
-    };
-    useEffect(() => {
-        for (const [key] of searchParams.entries()) {
-            const isChecked = !!checkedOptions.find((checkedOption) => (checkedOption.value = key));
-            if (!isChecked) {
-                searchParams.delete(key);
-            }
-        }
-        checkedOptions.forEach((checkedOption) => {
-            searchParams.set(checkedOption.value, 'true');
-        });
-        setSearchParams(searchParams);
-    }, [checkedOptions]);
-
     return (
         <>
             <h3 className={'font-semibold text-2xl'}>Hallo, {user.firstName}!</h3>
@@ -90,7 +71,7 @@ const StudentIndexPage = () => {
             <div>
                 <div className={'flex items-center gap-5'}>
                     <div>
-                        <h4 className={'font-medium text-lg'}>Meine Fahrstunden</h4>
+                        <PageHeader>Meine Fahrstunden</PageHeader>
                         <p className={'text-muted-foreground text-sm'}>
                             ({DateTime.now().startOf('week').toLocaleString(DateTime.DATE_MED)} -{' '}
                             {DateTime.now().endOf('week').toLocaleString(DateTime.DATE_MED)})

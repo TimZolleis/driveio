@@ -17,6 +17,7 @@ export async function checkStudentLimits(studentId: string, date: DateTime) {
         requireResult
     );
     const lessons = await findStudentLessons(studentId, date);
+    console.log(lessons);
     const maxStudentLessons =
         studentData.trainingPhase === TrainingPhase.EXAM_PREPARATION
             ? instructorData.maxExampreparationLessons

@@ -111,6 +111,9 @@ export default {
                 'accordion-up': 'accordion-up 0.2s ease-out',
                 'spinner-loading-bar': 'spinner-spin 1.2s linear infinite',
             },
+            screens: {
+                standalone: { raw: '(display-mode: standalone)' },
+            },
         },
     },
     plugins: [],
