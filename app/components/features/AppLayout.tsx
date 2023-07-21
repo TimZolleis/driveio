@@ -119,7 +119,8 @@ export const AppLayout = ({ children, user }: { children: ReactNode; user?: User
                             <p>{user?.lastName}</p>
                         </div>
                         <Form method={'post'} action={'/logout'}>
-                            <button className={'rounded-full p-2 hover:bg-stone-200'}>
+                            <button
+                                className={'rounded-full p-2 hover:bg-stone-200 hover:scale-110'}>
                                 <LogOut className={'h-5 w-5 text-stone-600'} />
                             </button>
                         </Form>

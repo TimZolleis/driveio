@@ -13,7 +13,6 @@ function getExtendedClient(client: PrismaClient) {
                 },
             },
             drivingLesson: {},
-            holiday: {},
         },
         query: {
             user: {
@@ -23,6 +22,7 @@ function getExtendedClient(client: PrismaClient) {
                             ...args.where,
                             deleted: false,
                         },
+                        include: args.include,
                     });
                 },
                 async findUnique({ query, model, operation, args }) {
@@ -31,6 +31,7 @@ function getExtendedClient(client: PrismaClient) {
                             ...args.where,
                             deleted: false,
                         },
+                        include: args.include,
                     });
                 },
                 async findFirst({ query, args, model, operation }) {
@@ -39,6 +40,7 @@ function getExtendedClient(client: PrismaClient) {
                             ...args.where,
                             deleted: false,
                         },
+                        include: args.include,
                     });
                 },
             },

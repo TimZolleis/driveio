@@ -97,7 +97,7 @@ export const LessonCard = ({
                         </DropdownMenu>
                     </div>
                     <LessonStatusBadge status={lesson.status}></LessonStatusBadge>
-                    <p className={'text-lg font-semibold'}>
+                    <p className={'text-lg font-medium'}>
                         Fahrstunde mit {instructor.firstName} {instructor.lastName}
                     </p>
                     <div className={'flex items-center gap-2 mt-2'}>
@@ -166,7 +166,7 @@ const CancelLesson = ({ lesson }: { lesson: DrivingLesson }) => {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel className={'w-full'}>Cancel</AlertDialogCancel>
                     <Form method={'post'} action={'/cancel-lesson'} className={'w-full'}>
                         <input type='hidden' name={'lessonId'} value={lesson.id} />
                         <Button className={'w-full'} isLoading={navigation.state === 'submitting'}>

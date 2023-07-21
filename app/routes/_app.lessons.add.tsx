@@ -33,6 +33,7 @@ import { Button } from '~/components/ui/Button';
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireRole(request, ROLE.INSTRUCTOR);
     const students = await findStudents({ instructorId: user.id });
+    console.log(students);
     const time = getQuery(request, 'time');
     const date = getQuery(request, 'date');
     return json({ students, time, date });
