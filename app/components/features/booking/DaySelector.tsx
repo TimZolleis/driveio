@@ -39,7 +39,6 @@ export const DaySelector = ({
     const currentSelectedIndex = availableDays.findIndex(
         (el) => el.toFormat('dd.MM.yyyy') === selected.toFormat('dd.MM.yyyy')
     );
-    console.log('Current index', currentSelectedIndex);
     const [selectedIndex, setSelectedIndex] = useState<number>(currentSelectedIndex || 0);
     const animationValue = useSpring(selectedIndex * -magicNumber);
     const firstAvailableDay = availableDays[0];
