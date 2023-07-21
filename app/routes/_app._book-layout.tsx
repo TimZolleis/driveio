@@ -26,53 +26,41 @@ import { Skeleton } from '~/components/features/user/UserFormSkeleton';
 export const loader = async ({ request }: DataFunctionArgs) => {
     const loaderId = uuid4();
     console.time(`book-layout-loader-${loaderId}`);
-    const disabledDaysPromise = getDisabledDays(bookingConfig.start, bookingConfig.end);
+    const disabledDays = await getDisabledDays(bookingConfig.start, bookingConfig.end);
+    const { date, duration } = verifyParameters(request, disabledDays);
     console.timeEnd(`book-layout-loader-${loaderId}`);
-    return defer({ disabledDaysPromise });
+    return defer({ disabledDays, date: getSafeISOStringFromDateTime(date), duration });
 };
 
 const Index = () => {
-    const { disabledDaysPromise } = useLoaderData<typeof loader>();
+    const { disabledDays, date: loaderDate, duration } = useLoaderData<typeof loader>();
     const [searchParams, setSearchParams] = useSearchParams();
-    const date = searchParams.get('date');
+    const date = searchParams.get('date') || loaderDate;
     const [selectedDate, setSelectedDate] = useState<DateTime>(
         date ? DateTime.fromISO(date) : DateTime.now()
     );
+    const disabledDateTimes = disabledDays.map((date) => DateTime.fromISO(date));
 
     return (
         <>
             <div className={'flex flex-col items-center'}>
                 <div className={'flex gap-2 items-end justify-center w-full p-3 lg:max-w-sm'}>
-                    <Suspense fallback={<Skeleton height={20} />}>
-                        <Await resolve={disabledDaysPromise}>
-                            {(disabledDays) => {
-                                const disabledDateTimes = disabledDays.map((date) =>
-                                    DateTime.fromISO(date)
-                                );
-                                return (
-                                    <DaySelector
-                                        selected={selectedDate}
-                                        onSelect={(day) => {
-                                            searchParams.set(
-                                                'date',
-                                                getSafeISOStringFromDateTime(day)
-                                            );
-                                            setSearchParams(searchParams);
-                                        }}
-                                        availableDays={getDaysInRange(
-                                            DateTime.now().plus({ day: 1 }),
-                                            DateTime.now().endOf('week').plus({ week: 1 })
-                                        ).filter((day) => {
-                                            return !disabledDateTimes.some((disabledDateTime) => {
-                                                return disabledDateTime.hasSame(day, 'day');
-                                            });
-                                        })}
-                                    />
-                                );
-                            }}
-                        </Await>
-                    </Suspense>
-                    <DurationSelector />
+                    <DaySelector
+                        selected={selectedDate}
+                        onSelect={(day) => {
+                            searchParams.set('date', getSafeISOStringFromDateTime(day));
+                            setSearchParams(searchParams);
+                        }}
+                        availableDays={getDaysInRange(
+                            DateTime.now().plus({ day: 1 }),
+                            DateTime.now().endOf('week').plus({ week: 1 })
+                        ).filter((day) => {
+                            return !disabledDateTimes.some((disabledDateTime) => {
+                                return disabledDateTime.hasSame(day, 'day');
+                            });
+                        })}
+                    />
+                    <DurationSelector defaultDuration={duration} />
                 </div>
                 <Outlet />
             </div>
@@ -80,8 +68,9 @@ const Index = () => {
     );
 };
 
-const DurationSelector = () => {
+const DurationSelector = ({ defaultDuration }: { defaultDuration: string }) => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const duration = searchParams.get('duration') || defaultDuration;
     const updateDuration = (duration: number) => {
         searchParams.set('duration', duration.toString());
         setSearchParams(searchParams);
@@ -97,9 +86,7 @@ const DurationSelector = () => {
                             <TimerReset className={'w-6 h-6'} />
                         </div>
                     </motion.div>
-                    <p className={'font-medium text-sm select-none'}>
-                        {searchParams.get('duration')} Minuten
-                    </p>
+                    <p className={'font-medium text-sm select-none'}>{duration} Minuten</p>
                 </div>
             </PopoverTrigger>
             <PopoverContent className={'text-sm text-muted-foreground grid grid-cols-2 gap-2'}>

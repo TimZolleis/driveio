@@ -11,18 +11,10 @@ export function verifyParameters(request: Request, disabledDays: string[]) {
     const date = getQuery(request, 'date');
     const disabledDateTimes = disabledDays.map((day) => DateTime.fromISO(day));
     const nextSelectableDay = getSelectableDay(disabledDateTimes);
-    if (!date || !isValidDate(DateTime.fromISO(date), disabledDateTimes)) {
-        url.searchParams.set('date', getSafeISODate(nextSelectableDay));
-        throw redirect(url.toString());
-    }
     const duration = getQuery(request, 'duration');
-    if (!duration) {
-        url.searchParams.set('duration', '90');
-        throw redirect(url.toString());
-    }
     return {
-        duration,
-        date: DateTime.fromISO(date),
+        duration: duration || bookingConfig.defaultDuration,
+        date: date ? DateTime.fromISO(date) : nextSelectableDay,
         nextSelectableDay,
     };
 }

@@ -8,7 +8,7 @@ import type { BingMapsLocation } from '~/types/bing-maps-location';
 import { QRCodeSVG } from 'qrcode.react';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/Popover';
 import { useEffect, useState } from 'react';
-import { Form, Link, useNavigation } from '@remix-run/react';
+import { Form, Link, useNavigation, useSearchParams } from '@remix-run/react';
 import { LessonStatusBadge } from '~/components/features/lesson/LessonStatus';
 import { errors } from '~/messages/errors';
 import { Skeleton } from '~/components/features/user/UserFormSkeleton';
@@ -135,16 +135,27 @@ export const LessonCard = ({
 const CancelLesson = ({ lesson }: { lesson: DrivingLesson }) => {
     const hasToPayFee = DateTime.fromISO(lesson.start).diff(DateTime.now()).as('hours') < 24;
     const navigation = useNavigation();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const closeModal = () => {
+        searchParams.delete('showModal');
+        setSearchParams(searchParams);
+    };
+    const openModal = () => {
+        searchParams.set('showModal', 'true');
+        setSearchParams(searchParams);
+    };
+
     return (
-        <AlertDialog>
-            <AlertDialogTrigger asChild>
-                <button
-                    className={
-                        'w-full hover:bg-secondary flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground'
-                    }>
-                    Absagen
-                </button>
-            </AlertDialogTrigger>
+        <AlertDialog
+            open={searchParams.get('showModal') === 'true'}
+            onOpenChange={() => closeModal()}>
+            <button
+                onClick={() => openModal()}
+                className={
+                    'w-full hover:bg-secondary flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground'
+                }>
+                Absagen
+            </button>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Fahrstunde absagen</AlertDialogTitle>

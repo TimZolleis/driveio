@@ -38,7 +38,7 @@ export const BottomNavigation = () => {
     return (
         <div
             className={
-                'flex sm:hidden w-full bg-white fixed bottom-0 border-t h-[88px] items-center justify-evenly px-10'
+                'flex sm:hidden w-full bg-white z-30 fixed bottom-0 border-t h-[90px] items-center justify-evenly px-10 pb-5'
             }>
             <NavLink to={'/student'}>
                 {({ isActive }) => (

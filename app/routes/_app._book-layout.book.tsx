@@ -245,17 +245,16 @@ const BookPage = () => {
                                         DateTime.fromISO(date).plus({ day: 1 })
                                     );
                                     return (
-                                        <div
-                                            className={
-                                                'flex flex-col items-end lg:items-start lg:flex-row gap-5 '
-                                            }>
-                                            <p>
-                                                Du kannst diese Woche noch{' '}
-                                                <span className={'font-medium'}>
-                                                    {remainingLessonsForStudent}
-                                                </span>{' '}
-                                                Fahrstunden buchen.
-                                            </p>
+                                        <div className={'flex flex-col items-end lg:items-start'}>
+                                            <div className={'flex w-full justify-start'}>
+                                                <p className={'text-muted-foreground text-xs'}>
+                                                    Du kannst diese Woche noch{' '}
+                                                    <span className={'font-medium'}>
+                                                        {remainingLessonsForStudent}
+                                                    </span>{' '}
+                                                    Fahrstunden buchen.
+                                                </p>
+                                            </div>
                                             {isAllowedToBook && availableSlots.length > 0 && (
                                                 <div className={'p-4 rounded-md border'}>
                                                     {currentAppointment && (

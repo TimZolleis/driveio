@@ -111,7 +111,7 @@ export function transformErrors<T>(
 }
 
 export function getBookingLink() {
-    return `/book?duration=90&date=${encodeURIComponent(getSafeISODate(DateTime.now()))}`;
+    return `/book`;
 }
 export function getGreeting(user: User) {
     const hour = DateTime.now().hour;
