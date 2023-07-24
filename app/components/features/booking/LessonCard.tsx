@@ -1,4 +1,4 @@
-import type { DrivingLesson, StudentData, User } from '.prisma/client';
+import type { DrivingLesson, LessonType, StudentData, User } from '.prisma/client';
 import { DateTime } from 'luxon';
 import { Button, buttonVariants } from '~/components/ui/Button';
 import { Dot } from '~/components/ui/Dot';
@@ -51,10 +51,12 @@ END:VEVENT`;
 export const LessonCard = ({
     lesson,
     instructor,
+    type,
     studentData,
     pickupLocation,
 }: {
     lesson: DrivingLesson;
+    type: LessonType;
     instructor: User;
     studentData: StudentData;
     pickupLocation: BingMapsResponse<BingMapsLocation>;
@@ -76,7 +78,7 @@ export const LessonCard = ({
     return (
         <>
             <div className={'space-y-1'}>
-                <div className={'rounded-md border relative p-4 shadow relative'}>
+                <div className={'rounded-md border p-4 relative'}>
                     {lessonEnd < DateTime.now() && (
                         <div
                             className={
@@ -112,6 +114,12 @@ export const LessonCard = ({
                                 'bg-primary/10 text-primary text-xs rounded-md px-3 py-1 font-medium'
                             }>
                             {lessonStart.toFormat('HH:mm')} - {lessonEnd.toFormat('HH:mm')}
+                        </div>
+                        <div
+                            className={
+                                'bg-primary/10 text-primary text-xs rounded-md px-3 py-1 font-medium'
+                            }>
+                            {type.name}
                         </div>
                     </div>
 

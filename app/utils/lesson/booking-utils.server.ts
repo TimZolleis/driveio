@@ -10,6 +10,10 @@ import { LessonStatus } from '@prisma/client';
 import { findAllBlockedSlots } from '~/models/blocked-slot.server';
 import { prisma } from '../../../prisma/db';
 import { checkOverlap, filterBlockedSlots } from '~/utils/booking/calculate-available-slots.server';
+import findUp from 'find-up';
+import { findUser } from '~/models/user.server';
+import { raise } from '~/utils/general-utils';
+import { errors } from '~/messages/errors';
 
 export async function checkStudentLimits(studentId: string, date: DateTime) {
     const studentData = await findStudentData(studentId).then(requireResult);
@@ -17,7 +21,6 @@ export async function checkStudentLimits(studentId: string, date: DateTime) {
         requireResult
     );
     const lessons = await findStudentLessons(studentId, date);
-    console.log(lessons);
     const maxStudentLessons =
         studentData.trainingPhase === TrainingPhase.EXAM_PREPARATION
             ? instructorData.maxExampreparationLessons
@@ -144,4 +147,58 @@ export async function checkSlotAvailability(studentId: string, start: DateTime, 
         return overlapsWithBooked;
     }
     return true;
+}
+
+export async function determineLessonType(studentId: string) {
+    const student =
+        (await prisma.user.findUnique({
+            where: {
+                id: studentId,
+            },
+            include: {
+                studentData: true,
+            },
+        })) ?? raise(errors.user.notFound);
+    if (!student.studentData) {
+        throw new Error(errors.student.noStudentData);
+    }
+    if (student.studentData?.lessonTypeId) {
+        return student.studentData.lessonTypeId;
+    } else {
+        const lessons = await prisma.drivingLesson.findMany({
+            where: {
+                userId: studentId,
+                status: LessonStatus.CONFIRMED || LessonStatus.REQUESTED,
+            },
+        });
+        const lessonTypes = await prisma.lessonTypeLicenseClass.findMany({
+            where: {
+                licenseClassId: student.studentData.licenseClassId,
+            },
+            include: {
+                lessonType: true,
+            },
+            orderBy: {
+                lessonType: {
+                    index: 'asc',
+                },
+            },
+        });
+        /**
+         * Now we need to check which types of lessons the student has already completed
+         */
+        for (const lessonType of lessonTypes) {
+            const lessonsOfType = lessons.filter(
+                (lesson) => lesson?.lessonTypeId === lessonType.lessonTypeId
+            );
+            if (lessonsOfType.length < lessonType.minimumDrives) {
+                return lessonType.lessonTypeId;
+            }
+        }
+        /**
+         * If the student has completed all mandatory drives, we will just return the first lesson type
+         * TODO: Add special lesson type here
+         */
+        return lessonTypes[0]?.lessonTypeId;
+    }
 }

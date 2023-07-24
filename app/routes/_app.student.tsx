@@ -34,8 +34,12 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
             },
             status: 'REQUESTED' || 'CONFIRMED',
         },
+        orderBy: {
+            start: 'asc',
+        },
         include: {
             instructor: true,
+            type: true,
         },
     });
     const studentDataPromise = findStudentDataWithPickupLocation(user.id);
@@ -79,17 +83,16 @@ const StudentIndexPage = () => {
                                             }
                                         />
                                     )}
-                                    {lessons
-                                        .sort((a, b) => a.start.localeCompare(b.start))
-                                        .map((lesson) => (
-                                            <LessonCard
-                                                key={lesson.id}
-                                                lesson={lesson}
-                                                instructor={lesson.instructor}
-                                                studentData={studentData}
-                                                pickupLocation={pickupLocation}
-                                            />
-                                        ))}
+                                    {lessons.map((lesson) => (
+                                        <LessonCard
+                                            type={lesson.type}
+                                            key={lesson.id}
+                                            lesson={lesson}
+                                            instructor={lesson.instructor}
+                                            studentData={studentData}
+                                            pickupLocation={pickupLocation}
+                                        />
+                                    ))}
                                 </>
                             )}
                         </Await>

@@ -25,6 +25,7 @@ import {
     checkStudentLimits,
     convertBlockedSlotToSlot,
     convertLessonToSlot,
+    determineLessonType,
     findBlockedLessons,
 } from '~/utils/lesson/booking-utils.server';
 import type { Appointment } from '~/components/ui/TableTimeGrid';
@@ -172,11 +173,13 @@ export const action = async ({ request }: DataFunctionArgs) => {
     if (!isSlotAvailable) {
         throw new Error(errors.slot.overbooked);
     }
+    const lessonTypeId = await determineLessonType(user.id);
     const lesson = await requestLesson({
         start: startDateTime,
         end: endDateTime,
         userId: user.id,
         instructorId,
+        lessonTypeId,
     });
     return json({
         success: true,

@@ -76,6 +76,7 @@ interface RequestLessonProps {
     userId: string;
     instructorId: string;
     description?: string;
+    lessonTypeId: string;
 }
 
 export async function requestLesson({
@@ -84,6 +85,7 @@ export async function requestLesson({
     userId,
     instructorId,
     description,
+    lessonTypeId,
 }: RequestLessonProps) {
     return prisma.drivingLesson.create({
         data: {
@@ -93,6 +95,7 @@ export async function requestLesson({
             end: getSafeISOStringFromDateTime(end),
             status: LessonStatus.REQUESTED,
             description,
+            lessonTypeId,
         },
     });
 }

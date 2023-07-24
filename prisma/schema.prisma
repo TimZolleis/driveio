@@ -43,6 +43,7 @@ model LessonType {
   index           Int
   studentData     StudentData[]
   licenseClasses  LessonTypeLicenseClass[]
+  lessons         DrivingLesson[]
 }
 
 model LessonTypeLicenseClass {
@@ -178,12 +179,14 @@ enum ROLE {
 model DrivingLesson {
   id            String         @id @default(uuid())
   userId        String
-  student       User           @relation(name: "studentDrivingLessons", fields: [userId], references: [id])
+  student       User           @relation(name: "studentDrivingLessons", fields: [userId], references: [id], onDelete: Cascade)
   instructorId  String
-  instructor    User           @relation(name: "instructorDrivingLessons", fields: [instructorId], references: [id])
+  instructor    User           @relation(name: "instructorDrivingLessons", fields: [instructorId], references: [id], onDelete: Cascade)
   start         String
   end           String
   status        LessonStatus
+  lessonTypeId  String
+  type          LessonType     @relation(fields: [lessonTypeId], references: [id], onDelete: Cascade)
   description   String?
   lessonActions LessonAction[]
 }
