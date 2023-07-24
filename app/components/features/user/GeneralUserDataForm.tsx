@@ -1,4 +1,3 @@
-import { Form, Link } from '@remix-run/react';
 import { Input } from '~/components/ui/Input';
 import {
     Select,
@@ -7,68 +6,72 @@ import {
     SelectTrigger,
     SelectValue,
 } from '~/components/ui/Select';
-import { Button, buttonVariants } from '~/components/ui/Button';
-import type { User } from '.prisma/client';
 import { ROLE } from '.prisma/client';
-import type { ValidationErrorActionData, ValidationErrors } from '~/types/general-types';
-import { transformErrors } from '~/utils/general-utils';
+import type { ValidationErrors } from '~/types/general-types';
+import { Label } from '~/components/ui/Label';
+import z from 'zod';
+import { zfd } from 'zod-form-data';
 
-//TODO: Add schema to forms, not actions
+export const createUserSchema = zfd.formData({
+    firstName: zfd.text(),
+    lastName: zfd.text(),
+    email: zfd.text(),
+    role: zfd.text(z.enum(['INSTRUCTOR', 'MANAGEMENT', 'STUDENT'])),
+});
 export const GeneralUserDataForm = ({
-    user,
-    action,
-    className,
+    defaultValues,
     errors,
 }: {
-    user?: User | null;
-    action?: string;
-    className?: string;
+    defaultValues?: z.infer<typeof createUserSchema>;
     errors?: ValidationErrors;
 }) => {
     return (
-        <Form method={'post'} action={action} className={className}>
-            <div className={'grid md:grid-cols-2 gap-3'}>
+        <div className={'grid gap-6 lg:gap-x-2'}>
+            <div className={'grid gap-2'}>
+                <Label>Vorname</Label>
                 <Input
-                    defaultValue={user?.firstName}
-                    required
+                    defaultValue={defaultValues?.firstName}
                     name={'firstName'}
                     error={errors?.firstName[0]}
-                    placeholder={'Max'}></Input>
+                    placeholder={'Max'}
+                />
+            </div>
+            <div className={'grid gap-2'}>
+                <Label>Nachname</Label>
                 <Input
-                    defaultValue={user?.lastName}
-                    required
+                    defaultValue={defaultValues?.lastName}
                     name={'lastName'}
                     error={errors?.lastName[0]}
-                    placeholder={'Mustermann'}></Input>
+                    placeholder={'Mustermann'}
+                />
+            </div>
+            <div className={'grid gap-2'}>
+                <Label>Email</Label>
+                <Input
+                    defaultValue={defaultValues?.email}
+                    name={'email'}
+                    error={errors?.email[0]}
+                    placeholder={'max@mustermann.de'}
+                />
+            </div>
+            <div className={'grid gap-2'}>
+                <Label>Rolle</Label>
                 <div>
-                    <Input
-                        defaultValue={user?.email}
+                    <Select
                         required
-                        name={'email'}
-                        error={errors?.email[0]}
-                        placeholder={'max@mustermann.de'}></Input>
-                    <p className={'text-destructive text-sm p-1'}>{errors?.error}</p>
+                        name={'role'}
+                        defaultValue={defaultValues?.role || ROLE.STUDENT}>
+                        <SelectTrigger className='w-full'>
+                            <SelectValue placeholder='Rolle' />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value={ROLE.STUDENT}>Fahrschüler</SelectItem>
+                            <SelectItem value={ROLE.INSTRUCTOR}>Fahrlehrer</SelectItem>
+                            <SelectItem value={ROLE.MANAGEMENT}>Verwaltung</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
-                <Select required name={'role'} defaultValue={user?.role}>
-                    <SelectTrigger className='w-full'>
-                        <SelectValue placeholder='Rolle' />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value={ROLE.STUDENT}>Fahrschüler</SelectItem>
-                        <SelectItem value={ROLE.INSTRUCTOR}>Fahrlehrer</SelectItem>
-                        <SelectItem value={ROLE.MANAGEMENT}>Verwaltung</SelectItem>
-                    </SelectContent>
-                </Select>
             </div>
-            <p className={'text-sm text-destructive'}>{errors?.error}</p>
-            <div className={'flex gap-3 justify-end mt-5'}>
-                <Link className={buttonVariants({ variant: 'outline' })} to={'/users'}>
-                    Abbruch
-                </Link>
-                <Button variant={'brand'} name={'intent'} value={'createUser'}>
-                    Weiter
-                </Button>
-            </div>
-        </Form>
+        </div>
     );
 };

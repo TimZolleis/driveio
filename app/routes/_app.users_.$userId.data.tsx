@@ -6,7 +6,10 @@ import { requireResult } from '~/utils/db/require-result.server';
 import { getUserData } from '~/utils/user/user.server';
 import type { ShouldRevalidateFunction } from '@remix-run/react';
 import { useActionData, useLoaderData } from '@remix-run/react';
-import { StudentDataForm } from '~/components/features/user/student/StudentDataForm';
+import {
+    StudentDataForm,
+    studentDataSchema,
+} from '~/components/features/user/student/StudentDataForm';
 import { zfd } from 'zod-form-data';
 import { z, ZodError } from 'zod';
 import { errors } from '~/messages/errors';
@@ -40,19 +43,6 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
 
     return json({ data, user, instructors, address, lessonTypes, licenseClasses });
 };
-
-export const studentDataSchema = zfd.formData({
-    dateOfBirth: zfd.text(z.string({ required_error: errors.form.notEmpty })),
-    trainingBegin: zfd.text(z.string().optional()),
-    trainingEnd: zfd.text(z.string().optional()),
-    licenseClassId: zfd.text(),
-    lessonTypeId: zfd.text(),
-    trainingPhase: zfd.text(z.enum(['EXAM_PREPARATION', 'DEFAULT', 'EXTENSIVE'])),
-    instructorId: zfd.text(z.string({ required_error: errors.form.notEmpty })),
-    pickupLat: zfd.text(z.string().optional()),
-    pickupLng: zfd.text(z.string().optional()),
-    waitingTime: zfd.numeric(),
-});
 
 export const instructorDataSchema = zfd.formData({
     dailyDrivingMinutes: zfd.numeric(),
@@ -168,7 +158,6 @@ const SetupUserDataPage = () => {
                     lessonTypes={lessonTypes}
                     licenseClasses={licenseClasses}
                     currentAddress={address?.resourceSets[0].resources[0]}
-                    studentData={data}
                     instructors={instructors}
                 />
             )}

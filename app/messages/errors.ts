@@ -39,6 +39,7 @@ export const errors = {
     form: {
         notEmpty: 'Dieses Feld darf nicht leer sein',
         invalidTime: 'Bitte gib eine gültige Uhrzeit ein (hh:mm)',
+        invalidDate: 'Bitte gib ein gültiges Datum ein (dd.mm.yyyy)',
     },
     student: {
         noStudentData:
