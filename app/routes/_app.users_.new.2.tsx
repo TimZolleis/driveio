@@ -30,17 +30,24 @@ function isStudentDataSchema(
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const instructor = await requireRole(request, ROLE.INSTRUCTOR);
-    const availableInstructors = await getInstructors(instructor.drivingSchoolId);
-    const licenseClasses = await prisma.licenseClass.findMany({
+    const instructorPromise = getInstructors(instructor.drivingSchoolId);
+    const licenseClassPromise = prisma.licenseClass.findMany({
         where: {
             drivingSchoolId: instructor.drivingSchoolId,
         },
     });
-    const lessonTypes = await prisma.lessonType.findMany({
+    const lessonTypePromise = await prisma.lessonType.findMany({
         where: {
             drivingSchoolId: instructor.drivingSchoolId,
         },
     });
+    //Await those concurrently to save time
+    const [availableInstructors, licenseClasses, lessonTypes] = await Promise.all([
+        instructorPromise,
+        licenseClassPromise,
+        lessonTypePromise,
+    ]);
+
     const session = await getSession(request);
     const progress = session.get('addUserFormProgress') as AddUserFormProgress | undefined;
     return json({
