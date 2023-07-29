@@ -79,12 +79,10 @@ export const AppLayout = ({ children, user }: { children: ReactNode; user?: User
             <main className={'flex'}>
                 <div
                     className={cn(
-                        'fixed z-10 flex h-full w-full flex-col border-r border-stone-200 bg-stone-100 p-4 transition-all dark:border-stone-700 dark:bg-stone-900 sm:w-60 sm:translate-x-0 font-medium text-sm transform',
+                        'fixed z-10 flex h-full w-full flex-col bg-slate-100 p-4 transition-all dark:border-stone-700 dark:bg-stone-900 sm:w-60 sm:translate-x-0 font-medium text-sm transform',
                         showNavigation ? 'translate-x-0' : '-translate-x-full'
                     )}>
-                    <Link
-                        to={'/'}
-                        className={'text-dodger-blue-700 font-semibold text-xl pb-2 pl-3'}>
+                    <Link to={'/'} className={'font-semibold text-xl pb-2 pl-3'}>
                         drive.io
                     </Link>
                     <Separator className={'mb-6'} />
@@ -102,7 +100,7 @@ export const AppLayout = ({ children, user }: { children: ReactNode; user?: User
                                 </SideBarLink>
                             ))}
 
-                        <Separator className={'my-6'} />
+                        <Separator className={'my-6 border-dashed'} />
                         {profileLinks.map((link) =>
                             (link.requiredAdmin && !user?.admin) ||
                             !user ||
@@ -127,8 +125,14 @@ export const AppLayout = ({ children, user }: { children: ReactNode; user?: User
                     </div>
                 </div>
                 {user?.role === ROLE.STUDENT && <BottomNavigation />}
-                <div className={cn('w-full', showNavigation ? 'pl-60 ' : 'sm:pl-60')}>
-                    <div className={'px-5 w-full py-5'}>{children}</div>
+                <div
+                    className={cn(
+                        'bg-slate-100 h-screen p-2 w-full',
+                        showNavigation ? 'pl-[15.5rem]' : 'sm:pl-[15.5rem]'
+                    )}>
+                    <div className={'w-full h-full bg-white rounded-2xl border shadow'}>
+                        <div className={'px-5 w-full py-5'}>{children}</div>
+                    </div>
                 </div>
             </main>
         </main>
@@ -149,7 +153,7 @@ export const SideBarLink = ({
         <Link
             to={to}
             className={
-                'flex items-center gap-2 p-2 rounded-md hover:bg-stone-200 select-none text-gray-800'
+                'flex items-center gap-2 p-2 rounded-md hover:bg-slate-200 select-none text-gray-800'
             }>
             {icon}
             {children}

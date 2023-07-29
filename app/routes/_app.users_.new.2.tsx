@@ -1,4 +1,10 @@
-import { Form, useLoaderData, useSearchParams } from '@remix-run/react';
+import {
+    Form,
+    useActionData,
+    useLoaderData,
+    useNavigation,
+    useSearchParams,
+} from '@remix-run/react';
 import { cn } from '~/utils/css';
 import { GeneralUserDataForm } from '~/components/features/user/GeneralUserDataForm';
 import type { ActionArgs, DataFunctionArgs } from '@remix-run/node';
@@ -20,6 +26,7 @@ import { PageHeader } from '~/components/ui/PageHeader';
 import { ArrowRight } from 'lucide-react';
 import { prisma } from '../../prisma/db';
 import type z from 'zod';
+import type { ValidationErrorActionData } from '~/types/general-types';
 
 //A type assertion function that asserts "step-2" object on progress is of type studentDataSchema
 function isStudentDataSchema(
@@ -34,6 +41,9 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
     const licenseClassPromise = prisma.licenseClass.findMany({
         where: {
             drivingSchoolId: instructor.drivingSchoolId,
+        },
+        orderBy: {
+            name: 'asc',
         },
     });
     const lessonTypePromise = await prisma.lessonType.findMany({
@@ -95,6 +105,10 @@ export const action = async ({ request, params }: ActionArgs) => {
 const AddUserLayout = () => {
     const { availableInstructors, progress, lessonTypes, licenseClasses } =
         useLoaderData<typeof loader>();
+    const actionData = useActionData<ValidationErrorActionData>();
+    console.log(actionData);
+    const navigation = useNavigation();
+
     return (
         <>
             <p className={'text-sm text-muted-foreground py-2'}>2/3</p>
@@ -103,23 +117,20 @@ const AddUserLayout = () => {
                 Füge hier Informationen wie Name und Rolle hinzu.
             </p>
             <div className={'mt-4'}>
-                <Form method={'post'}>
-                    {progress?.['step-1'].role === ROLE.STUDENT && (
-                        <StudentDataForm
-                            defaultValues={
-                                progress?.['step-2'] as z.infer<typeof studentDataSchema>
-                            }
-                            instructors={availableInstructors}
-                            licenseClasses={licenseClasses}
-                            lessonTypes={lessonTypes}>
-                            <Button>
-                                <ArrowRight className={'w-4 h-4'} />
-                                <p>Weiter</p>
-                            </Button>
-                        </StudentDataForm>
-                    )}
-                    <div className={'flex justify-end gap-2 mt-2'}></div>
-                </Form>
+                {progress?.['step-1'].role === ROLE.STUDENT && (
+                    <StudentDataForm
+                        errors={actionData?.formValidationErrors}
+                        defaultValues={progress?.['step-2'] as z.infer<typeof studentDataSchema>}
+                        instructors={availableInstructors}
+                        licenseClasses={licenseClasses}
+                        lessonTypes={lessonTypes}>
+                        <Button isLoading={navigation.state !== 'idle'}>
+                            <ArrowRight className={'w-4 h-4'} />
+                            <p>Weiter</p>
+                        </Button>
+                    </StudentDataForm>
+                )}
+                <div className={'flex justify-end gap-2 mt-2'}></div>
             </div>
         </>
     );

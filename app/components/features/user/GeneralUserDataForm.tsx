@@ -27,7 +27,7 @@ export const GeneralUserDataForm = ({
 }) => {
     return (
         <div className={'grid gap-6 lg:gap-x-2'}>
-            <div className={'grid gap-2'}>
+            <div className={'grid gap-4'}>
                 <Label>Vorname</Label>
                 <Input
                     defaultValue={defaultValues?.firstName}
@@ -36,7 +36,7 @@ export const GeneralUserDataForm = ({
                     placeholder={'Max'}
                 />
             </div>
-            <div className={'grid gap-2'}>
+            <div className={'grid gap-4'}>
                 <Label>Nachname</Label>
                 <Input
                     defaultValue={defaultValues?.lastName}
@@ -45,7 +45,7 @@ export const GeneralUserDataForm = ({
                     placeholder={'Mustermann'}
                 />
             </div>
-            <div className={'grid gap-2'}>
+            <div className={'grid gap-4'}>
                 <Label>Email</Label>
                 <Input
                     defaultValue={defaultValues?.email}
@@ -54,7 +54,7 @@ export const GeneralUserDataForm = ({
                     placeholder={'max@mustermann.de'}
                 />
             </div>
-            <div className={'grid gap-2'}>
+            <div className={'grid gap-4'}>
                 <Label>Rolle</Label>
                 <div>
                     <Select

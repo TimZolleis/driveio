@@ -1,4 +1,4 @@
-import { Form, useActionData, useLoaderData } from '@remix-run/react';
+import { Form, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
 import { Card, CardDescription, CardHeader, CardTitle } from '~/components/ui/Card';
 import type { ActionArgs, DataFunctionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
@@ -15,10 +15,11 @@ import {
     GeneralUserDataForm,
 } from '~/components/features/user/GeneralUserDataForm';
 import { Button } from '~/components/ui/Button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { ValidationErrorActionData } from '~/types/general-types';
 import type { studentDataSchema } from '~/components/features/user/student/StudentDataForm';
 import type { instructorDataSchema } from '~/routes/_app.users_.$userId.data';
+import { motion } from 'framer-motion';
 
 export type AddUserFormProgress = {
     'step-1': z.infer<typeof createUserSchema>;
@@ -57,9 +58,10 @@ export const action = async ({ request, params }: ActionArgs) => {
 const AddUserLayout = () => {
     const { progress } = useLoaderData<typeof loader>();
     const actionData = useActionData<ValidationErrorActionData>();
+    const navigation = useNavigation();
     return (
         <>
-            <p className={'text-sm text-muted-foreground py-2'}>1/3</p>
+            <p className={'text-sm text-muted-foreground py-2'}>2/3</p>
             <PageHeader>Benutzer anlegen</PageHeader>
             <p className={'text-muted-foreground text-sm'}>
                 Füge hier Informationen wie Name und Rolle hinzu.
@@ -71,8 +73,10 @@ const AddUserLayout = () => {
                         errors={actionData?.formValidationErrors}
                     />
                     <div className={'flex justify-end gap-2 mt-2'}>
-                        <Button>
-                            <ArrowRight className={'w-4 h-4'} />
+                        <Button isLoading={navigation.state !== 'idle'}>
+                            <motion.div whileHover={{ x: 5 }}>
+                                <ArrowRight className={'w-4 h-4'} />
+                            </motion.div>
                             <p>Weiter</p>
                         </Button>
                     </div>
@@ -80,6 +84,10 @@ const AddUserLayout = () => {
             </div>
         </>
     );
+};
+
+export const StepSelector = ({ currentStep }: { currentStep: number }) => {
+    return <p className={'text-sm text-muted-foreground'}>{currentStep}/3</p>;
 };
 
 export default AddUserLayout;

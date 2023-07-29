@@ -22,7 +22,7 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 const UserPage = () => {
     const { users } = useLoaderData<typeof loader>();
     return (
-        <div>
+        <>
             <div className={'flex w-full justify-between items-center'}>
                 <div>
                     <PageHeader>Benutzer</PageHeader>
@@ -36,7 +36,7 @@ const UserPage = () => {
                 <UserTable users={users} />
             </div>
             <Outlet />
-        </div>
+        </>
     );
 };
 

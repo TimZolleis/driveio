@@ -21,7 +21,7 @@ import { DateTime } from 'luxon';
 import { useDebounceFetcher } from '~/utils/form/debounce-fetcher';
 import { useDoubleCheck } from '~/utils/general-utils';
 import { Lock, Unlock } from 'lucide-react';
-import type { ValidationErrorActionData } from '~/types/general-types';
+import type { ValidationErrorActionData, ValidationErrors } from '~/types/general-types';
 import { FormStatusIndicator } from '~/components/ui/FormStatusIndicator';
 import { zfd } from 'zod-form-data';
 import { z } from 'zod';
@@ -34,9 +34,7 @@ interface StudentDataFormProps {
     instructors: User[];
     licenseClasses: LicenseClass[];
     lessonTypes: LessonType[];
-    errors?: {
-        [key: string]: string[];
-    };
+    errors?: ValidationErrors;
     currentAddress?: BingMapsLocation;
     children?: ReactNode;
 }
@@ -110,7 +108,7 @@ export const StudentDataForm = ({
                                     : DateTime.now().toFormat('dd.MM.yyyy')
                             }></Input>
 
-                        <p className={'text-xs text-destructive'}>{errors?.dateOfBirth[0]}</p>
+                        <p className={'text-xs text-destructive'}>{errors?.dateOfBirth?.[0]}</p>
                     </div>
                     <div className={'grid gap-2'}>
                         <Label>Ausbildungsbeginn</Label>
@@ -141,7 +139,7 @@ export const StudentDataForm = ({
                     <div className={'grid gap-2'}>
                         <Label>Ausbildungsklasse</Label>
                         <Select
-                            error={formFetcher.data?.formValidationErrors?.trainingClass?.[0]}
+                            error={formFetcher.data?.formValidationErrors?.licenseClassId?.[0]}
                             autosave={autosave}
                             fetcher={formFetcher}
                             defaultValue={defaultValues?.licenseClassId}

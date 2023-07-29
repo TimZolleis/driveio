@@ -7,6 +7,7 @@ import { Loader } from '~/components/ui/Loader';
 const pageHeaderVariants = cva('text-primary', {
     variants: {
         variant: {
+            '3xl': 'text-3xl font-bold',
             xl: 'text-2xl font-semibold',
             lg: 'text-lg font-semibold',
         },
