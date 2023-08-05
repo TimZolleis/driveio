@@ -45,7 +45,7 @@ export const action = async ({ request, params }: ActionArgs) => {
         }
         const formProgress = session.get('addUserFormProgress') as AddUserFormProgress | undefined;
         session.set('addUserFormProgress', { ...formProgress, 'step-1': data });
-        return redirect('/users/new/2', {
+        return redirect('/users/new/data', {
             headers: {
                 'Set-Cookie': await commitSession(session),
             },
@@ -61,7 +61,7 @@ const AddUserLayout = () => {
     const navigation = useNavigation();
     return (
         <>
-            <p className={'text-sm text-muted-foreground py-2'}>2/3</p>
+            <p className={'text-sm text-muted-foreground py-2'}>1/3</p>
             <PageHeader>Benutzer anlegen</PageHeader>
             <p className={'text-muted-foreground text-sm'}>
                 Füge hier Informationen wie Name und Rolle hinzu.

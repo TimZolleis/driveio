@@ -20,7 +20,7 @@ import {
 } from '~/components/features/user/student/StudentDataForm';
 import { Button } from '~/components/ui/Button';
 import { commitSession, getSession } from '~/utils/session/session.server';
-import type { AddUserFormProgress } from '~/routes/_app.users_.new.1';
+import type { AddUserFormProgress } from '~/routes/_app.users_.new';
 import { getInstructors } from '~/models/instructor.server';
 import { PageHeader } from '~/components/ui/PageHeader';
 import { ArrowRight } from 'lucide-react';
@@ -60,6 +60,9 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
 
     const session = await getSession(request);
     const progress = session.get('addUserFormProgress') as AddUserFormProgress | undefined;
+    if (!progress) {
+        throw redirect('/users/new');
+    }
     return json({
         instructor,
         progress,
@@ -98,6 +101,8 @@ export const action = async ({ request, params }: ActionArgs) => {
             },
         });
     } catch (error) {
+        console.log('Caught');
+        console.log(error);
         return handleActionError(error);
     }
 };
@@ -106,7 +111,6 @@ const AddUserLayout = () => {
     const { availableInstructors, progress, lessonTypes, licenseClasses } =
         useLoaderData<typeof loader>();
     const actionData = useActionData<ValidationErrorActionData>();
-    console.log(actionData);
     const navigation = useNavigation();
 
     return (
@@ -133,43 +137,6 @@ const AddUserLayout = () => {
                 <div className={'flex justify-end gap-2 mt-2'}></div>
             </div>
         </>
-    );
-};
-
-const StepIndicator = () => {
-    const [searchParams] = useSearchParams();
-    const step = parseInt(searchParams.get('step') || '1');
-    return (
-        <div
-            className={
-                'flex items-center gap-2 justify-between font-semibold text-primary leading-none max-w-xl w-full mt-2'
-            }>
-            <div
-                className={cn(
-                    'w-10 rounded-full h-10 shrink-0 flex items-center justify-center',
-                    step === 1 ? 'bg-blue-700 text-white' : 'bg-gray-100 text-primary'
-                )}>
-                1
-            </div>
-
-            <div className={'bg-gray-100 h-[1px] w-full'}></div>
-
-            <div
-                className={cn(
-                    'w-10 rounded-full h-10 shrink-0 flex items-center justify-center',
-                    step === 2 ? 'bg-blue-700 text-white' : 'bg-gray-100 text-primary'
-                )}>
-                2
-            </div>
-            <div className={'bg-gray-100 h-[1px] w-full'}></div>
-            <div
-                className={cn(
-                    'w-10 rounded-full h-10 shrink-0 flex items-center justify-center',
-                    step === 3 ? 'bg-blue-700 text-white' : 'bg-gray-100 text-primary'
-                )}>
-                3
-            </div>
-        </div>
     );
 };
 

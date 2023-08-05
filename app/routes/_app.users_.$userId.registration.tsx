@@ -1,6 +1,6 @@
 import type { DataFunctionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
-import { requireParameter } from '~/utils/general-utils';
+import { getRandomCode, requireParameter } from '~/utils/general-utils';
 import { prisma } from '../../prisma/db';
 import { requireResult } from '~/utils/db/require-result.server';
 import { getUserData } from '~/utils/user/user.server';
@@ -18,7 +18,6 @@ import { Separator } from '~/components/ui/Seperator';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/Alert';
 import { AlertTriangle } from 'lucide-react';
 import { PendingRegistration } from '~/components/features/user/Registration';
-import { getRandomCode } from '~/routes/_app.users.add';
 import { PageHeader } from '~/components/ui/PageHeader';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {

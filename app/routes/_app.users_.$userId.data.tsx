@@ -155,6 +155,7 @@ const SetupUserDataPage = () => {
             <Separator className={'my-6'} />
             {isStudentData(data, user) && (
                 <StudentDataForm
+                    defaultValues={data}
                     lessonTypes={lessonTypes}
                     licenseClasses={licenseClasses}
                     currentAddress={address?.resourceSets[0].resources[0]}

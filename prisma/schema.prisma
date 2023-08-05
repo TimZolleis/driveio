@@ -78,7 +78,7 @@ model User {
   email              String          @unique
   phone              String?
   role               ROLE
-  admin              Boolean
+  admin              Boolean         @default(false)
   setupComplete      Boolean         @default(false)
   enabled            Boolean         @default(true)
   registration       Registration?
@@ -106,7 +106,7 @@ model Permission {
 model StudentData {
   userId         String        @id
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  instructorId   String?
+  instructorId   String
   trainingBegin  String?
   trainingEnd    String?
   licenseClassId String

@@ -43,14 +43,14 @@ type DefaultValues = z.infer<typeof studentDataSchema>;
 
 export const studentDataSchema = zfd.formData({
     dateOfBirth: zfd.text(z.string({ required_error: errors.form.notEmpty })),
-    trainingBegin: zfd.text(z.string().optional()),
-    trainingEnd: zfd.text(z.string().optional()),
+    trainingBegin: zfd.text(z.string().optional().nullable()),
+    trainingEnd: zfd.text(z.string().optional().nullable()),
     licenseClassId: zfd.text(),
-    lessonTypeId: zfd.text(),
+    lessonTypeId: zfd.text(z.string().nullable()),
     trainingPhase: zfd.text(z.enum(['EXAM_PREPARATION', 'DEFAULT', 'EXTENSIVE'])),
     instructorId: zfd.text(z.string({ required_error: errors.form.notEmpty })),
-    pickupLat: zfd.text(z.string().optional()),
-    pickupLng: zfd.text(z.string().optional()),
+    pickupLat: zfd.numeric(z.number().optional().nullable()),
+    pickupLng: zfd.numeric(z.number().optional().nullable()),
     waitingTime: zfd.numeric(),
 });
 

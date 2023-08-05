@@ -28,7 +28,7 @@ const UserPage = () => {
                     <PageHeader>Benutzer</PageHeader>
                     <p className={'text-muted-foreground'}>Übersicht</p>
                 </div>
-                <Link to={'add'} className={buttonVariants({ variant: 'brand' })}>
+                <Link to={'/users/new'} className={buttonVariants()}>
                     Benutzer hinzufügen
                 </Link>
             </div>

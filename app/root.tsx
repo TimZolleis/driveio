@@ -98,7 +98,7 @@ export default function App() {
                 <Links />
             </head>
             <body>
-                <Toaster richColors={true} closeButton={true} />
+                <Toaster position={'top-right'} richColors={true} closeButton={true} />
                 <Outlet />
                 <ScrollRestoration />
                 <Scripts />

@@ -22,7 +22,7 @@ const linkContainerAnimationVariants = {
     },
 };
 
-const linkIconVariants = cva('w-6 h-6', {
+const linkIconVariants = cva('w-5 h-5', {
     variants: {
         variant: {
             default: 'text-gray-400',
@@ -67,7 +67,7 @@ export const BottomNavigation = () => {
                     <motion.div
                         whileHover={{ scale: 1.3, y: -20, rotate: 90 }}
                         className={'rounded-full p-3 bg-primary shadow-lg shadow-primary/20'}>
-                        <Plus className={'text-white h-8 w-8'} />
+                        <Plus className={'text-white h-5 w-5'} />
                     </motion.div>
                 )}
             </NavLink>
@@ -82,7 +82,7 @@ export const BottomNavigation = () => {
                     </IconContainer>
                 )}
             </NavLink>
-            <Form method={'post'} action={'/logout'}>
+            <Form method={'post'} action={'/logout'} className={'flex items-center justify-center'}>
                 <IconContainer>
                     <button>
                         <LogOut className={linkIconVariants({ variant: 'default' })} />

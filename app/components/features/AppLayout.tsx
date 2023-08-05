@@ -127,10 +127,13 @@ export const AppLayout = ({ children, user }: { children: ReactNode; user?: User
                 {user?.role === ROLE.STUDENT && <BottomNavigation />}
                 <div
                     className={cn(
-                        'bg-slate-100 h-screen p-2 w-full',
+                        'bg-slate-100 h-screen sm:p-2 w-full overflow-hidden',
                         showNavigation ? 'pl-[15.5rem]' : 'sm:pl-[15.5rem]'
                     )}>
-                    <div className={'w-full h-full bg-white rounded-2xl border shadow'}>
+                    <div
+                        className={
+                            'w-full h-full bg-white sm:rounded-2xl sm:border sm:shadow overflow-scroll scrollbar-hide'
+                        }>
                         <div className={'px-5 w-full py-5'}>{children}</div>
                     </div>
                 </div>
