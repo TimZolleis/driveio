@@ -69,6 +69,7 @@ export function combineHeaders(...headers: Array<ResponseInit['headers']>) {
     }
     return combined;
 }
+
 function callAll<Args extends Array<unknown>>(
     ...fns: Array<((...args: Args) => unknown) | undefined>
 ) {
@@ -115,8 +116,9 @@ export function getBookingLink() {
     return `/book`;
 }
 
-export function safeParseFloat(value: string | undefined) {
+export function safeParseFloat(value: string | undefined | null | number) {
     try {
+        if (typeof value === 'number') return value;
         return value ? parseFloat(value) : undefined;
     } catch (error) {
         return undefined;
@@ -140,6 +142,7 @@ export function getGreeting(user: User) {
     }
     return `Guten ${timeGreeting}, ${user.firstName}`;
 }
+
 export function getRandomCode(length: number) {
     return Math.floor(
         Math.pow(10, length - 1) +

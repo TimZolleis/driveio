@@ -1,34 +1,20 @@
-import {
-    Form,
-    Link,
-    useActionData,
-    useLoaderData,
-    useNavigation,
-    useSearchParams,
-} from '@remix-run/react';
+import { Form, Link, useLoaderData, useSearchParams } from '@remix-run/react';
 import { cn } from '~/utils/css';
-import { GeneralUserDataForm } from '~/components/features/user/GeneralUserDataForm';
 import type { ActionArgs, DataFunctionArgs, SerializeFrom } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { getQuery, handleActionError, safeParseFloat } from '~/utils/general-utils';
 import { requireRole } from '~/utils/user/user.server';
 import type { Registration } from '.prisma/client';
 import { ROLE } from '.prisma/client';
-import { errors } from '~/messages/errors';
-import { instructorDataSchema } from '~/routes/_app.users_.$userId.data';
 import type { studentDataSchema } from '~/components/features/user/student/StudentDataForm';
-import { StudentDataForm } from '~/components/features/user/student/StudentDataForm';
 import { Button, buttonVariants } from '~/components/ui/Button';
 import { commitSession, getSession } from '~/utils/session/session.server';
 import type { AddUserFormProgress } from '~/routes/_app.users_.new';
-import { getInstructors } from '~/models/instructor.server';
 import { PageHeader } from '~/components/ui/PageHeader';
-import { ArrowRight } from 'lucide-react';
 import { prisma } from '../../prisma/db';
 import type z from 'zod';
 import type { ReactNode } from 'react';
 import { roles } from '~/messages/roles';
-import { Suspense } from 'react';
 import { DateTime } from 'luxon';
 import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
 import { createRegistration } from '~/models/registration.server';
@@ -79,7 +65,7 @@ export const action = async ({ request, params }: ActionArgs) => {
             },
         });
         //TODO: Add instructor data
-        if (isStudentDataSchema(progress)) {
+        if (progress && isStudentDataSchema(progress)) {
             console.log(progress['step-2'].lessonTypeId);
             const studentData = await prisma.studentData.create({
                 data: {
