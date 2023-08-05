@@ -7,6 +7,13 @@ import { DateTime } from 'luxon';
 import { Link, Outlet, useLoaderData, useSearchParams } from '@remix-run/react';
 import { PageHeader } from '~/components/ui/PageHeader';
 import { Tabs, TabsList, TabsTrigger } from '~/components/ui/Tabs';
+import { Badge } from '~/components/ui/Badge';
+import { motion } from 'framer-motion';
+import { cn } from '~/utils/css';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getSession } from '~/utils/session/session.server';
+import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
+import { Drawer } from 'vaul';
 
 export interface LessonWithStudent extends DrivingLesson {
     student: User;
@@ -14,39 +21,25 @@ export interface LessonWithStudent extends DrivingLesson {
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireRole(request, ROLE.INSTRUCTOR);
-    return json({ user, currentUrl: request.url });
-};
-
-export const action = async ({ request, params }: DataFunctionArgs) => {
-    return null;
+    const session = await getSession(request);
+    const currentIntervalStart =
+        session.get('currentIntervalStart') || getSafeISOStringFromDateTime(DateTime.now());
+    return json({ user, currentUrl: request.url, currentIntervalStart });
 };
 
 const LessonPage = () => {
-    const { currentUrl } = useLoaderData<typeof loader>();
-    const [searchParams] = useSearchParams();
-    const start = searchParams.get('start')
-        ? DateTime.fromISO(searchParams.get('start')!)
-        : DateTime.now();
-
+    const { currentIntervalStart } = useLoaderData<typeof loader>();
+    const intervalStart = DateTime.fromISO(currentIntervalStart);
     return (
         <main>
             <PageHeader>Fahrstunden</PageHeader>
-            <p className={'text-muted-foreground text-sm'}>
-                {start.startOf('week').toFormat('DD')} -{' '}
-                {start.endOf('week').minus({ day: 2 }).toFormat('DD')}
-            </p>
-            <Tabs
-                defaultValue={currentUrl.includes('plan') ? 'plan' : 'overview'}
-                className={'mt-4'}>
-                <TabsList>
-                    <TabsTrigger asChild={true} value={'overview'}>
-                        <Link to={'/lessons'}>Übersicht</Link>
-                    </TabsTrigger>
-                    <TabsTrigger value={'plan'}>
-                        <Link to={'/lessons/plan'}>Planen</Link>
-                    </TabsTrigger>
-                </TabsList>
-            </Tabs>
+            <div className={'flex items-center gap-2'}>
+                <Badge variant={'secondary'}>
+                    {intervalStart.startOf('week').toFormat('DD')} -{' '}
+                    {intervalStart.endOf('week').minus({ day: 2 }).toFormat('DD')}
+                </Badge>
+                <Badge variant={'secondary'}>KW {intervalStart.weekNumber}</Badge>
+            </div>
             <Outlet />
         </main>
     );

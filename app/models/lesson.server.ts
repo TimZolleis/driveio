@@ -57,6 +57,40 @@ export async function findWeeklyLessons({
     });
 }
 
+export async function findDailyLessons(instructorId: string, day: DateTime, status?: LessonStatus) {
+    return prisma.drivingLesson.findMany({
+        where: {
+            instructorId,
+            status,
+            start: {
+                gte: getSafeISOStringFromDateTime(day.startOf('day')),
+                lte: getSafeISOStringFromDateTime(day.endOf('day')),
+            },
+        },
+        include: {
+            student: {
+                include: {
+                    studentData: true,
+                },
+            },
+        },
+    });
+}
+
+export async function shiftLessons(lessonsToShift: DrivingLesson[]) {
+    for (const lessonToShift of lessonsToShift) {
+        await prisma.drivingLesson.update({
+            where: {
+                id: lessonToShift.id,
+            },
+            data: {
+                start: lessonToShift.start,
+                end: lessonToShift.end,
+            },
+        });
+    }
+}
+
 export async function findStudentLessons(studentId: string, date: DateTime) {
     return prisma.drivingLesson.findMany({
         where: {

@@ -6,7 +6,7 @@ import { getQuery } from '~/utils/general-utils';
 import { findWeeklyLessons } from '~/models/lesson.server';
 import { DateTime, Interval } from 'luxon';
 import type { ShouldRevalidateFunction } from '@remix-run/react';
-import { Outlet, useLoaderData } from '@remix-run/react';
+import { Form, Outlet, useLoaderData } from '@remix-run/react';
 import { LessonStatus } from '@prisma/client';
 import type { ViewMode } from '~/components/features/lesson/LessonOverviewDaySelector';
 import { LessonOverviewDaySelector } from '~/components/features/lesson/LessonOverviewDaySelector';
@@ -21,6 +21,10 @@ import {
 import { getHourRange } from '~/utils/hooks/timegrid';
 import { useNavigate } from 'react-router';
 import { commitSession, getSession } from '~/utils/session/session.server';
+import { motion } from 'framer-motion';
+import { cn } from '~/utils/css';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
 
 export const shouldRevalidate: ShouldRevalidateFunction = ({
     actionResult,
@@ -36,22 +40,36 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireRole(request, ROLE.INSTRUCTOR);
     const session = await getSession(request);
     const viewMode = session.get('viewMode') as ViewMode | undefined;
-    const start = getQuery(request, 'startDate');
+    const currentIntervalStart = session.get('currentIntervalStart')
+        ? DateTime.fromISO(session.get('currentIntervalStart') as string)
+        : DateTime.now();
     const lessons = await findWeeklyLessons({
         instructorId: user.id,
-        start: start ? DateTime.fromISO(start) : DateTime.now(),
+        start: currentIntervalStart,
     });
     const overlappingGroups = getOverlappingAppointments(
         lessons.filter((lesson) => lesson.status !== LessonStatus.DECLINED)
     );
+    const startISO = getSafeISOStringFromDateTime(currentIntervalStart);
+    const endISO = getSafeISOStringFromDateTime(currentIntervalStart.plus({ week: 1 }));
 
-    return json({ lessons, overlappingGroups, viewMode });
+    return json({ lessons, overlappingGroups, viewMode, startISO, endISO });
 };
 
 export const action = async ({ request, params }: DataFunctionArgs) => {
     const formData = await request.formData();
     const session = await getSession(request);
     const viewMode = formData.get('viewMode')?.toString();
+    const currentIntervalStart = session.get('currentIntervalStart')
+        ? DateTime.fromISO(session.get('currentIntervalStart') as string)
+        : DateTime.now();
+    const changeIntervalIntent = formData.get('changeIntervalIntent')?.toString();
+    if (changeIntervalIntent === 'increment') {
+        session.set('currentIntervalStart', currentIntervalStart.plus({ week: 1 }).toISO());
+    }
+    if (changeIntervalIntent === 'decrement') {
+        session.set('currentIntervalStart', currentIntervalStart.minus({ week: 1 }).toISO());
+    }
     session.set('viewMode', viewMode);
     return json(
         { forceRevalidation: true },
@@ -59,8 +77,8 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
     );
 };
 
-function getInterval(viewMode: ViewMode | undefined) {
-    const now = DateTime.now();
+function getInterval(startISO: string, viewMode: ViewMode | undefined) {
+    const now = DateTime.fromISO(startISO);
     switch (viewMode) {
         case 'monday':
             return Interval.fromDateTimes(
@@ -94,7 +112,7 @@ function getInterval(viewMode: ViewMode | undefined) {
 }
 
 const LessonOverviewPage = () => {
-    const { lessons, viewMode } = useLoaderData<typeof loader>();
+    const { lessons, viewMode, startISO } = useLoaderData<typeof loader>();
     const activeLessons = lessons.filter((lesson) => lesson.status !== LessonStatus.DECLINED);
     const navigate = useNavigate();
     const appointments = activeLessons.map((lesson) => {
@@ -106,12 +124,31 @@ const LessonOverviewPage = () => {
         };
     });
 
-    const interval = getInterval(viewMode);
+    const interval = getInterval(startISO, viewMode);
 
     return (
         <>
             <Outlet />
-            <div className={'grid gap-4 md:grid-cols-2 lg:grid-cols-4'}></div>
+            <Form method={'post'} className={'flex items-center gap-2 pt-2'}>
+                <motion.button
+                    name={'changeIntervalIntent'}
+                    value={'decrement'}
+                    whileTap={{ scale: 0.9 }}
+                    className={cn(
+                        'p-1 rounded-md border shadow-sm opacity-100 hover:cursor-pointer'
+                    )}>
+                    <ChevronLeft className={cn('w-5 h-5')} />
+                </motion.button>
+                <motion.button
+                    name={'changeIntervalIntent'}
+                    value={'increment'}
+                    whileTap={{ scale: 0.9 }}
+                    className={cn(
+                        'p-1 rounded-md border shadow-sm opacity-100 hover:cursor-pointer'
+                    )}>
+                    <ChevronRight className={cn('w-5 h-5')} />
+                </motion.button>
+            </Form>
             <div className={'sm:overflow-hidden rounded-md'}>
                 <div className={'overflow-scroll md:overflow-hidden'}>
                     <LessonOverviewDaySelector viewMode={viewMode}></LessonOverviewDaySelector>

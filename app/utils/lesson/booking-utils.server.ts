@@ -2,18 +2,20 @@ import { findStudentData } from '~/models/student-data.server';
 import { findInstructorData } from '~/models/instructor-data.server';
 import { requireResult } from '~/utils/db/require-result.server';
 import { DateTime } from 'luxon';
-import { findInstructorLessons, findStudentLessons } from '~/models/lesson.server';
+import {
+    findDailyLessons,
+    findInstructorLessons,
+    findStudentLessons,
+} from '~/models/lesson.server';
 import type { BlockedSlot, DrivingLesson } from '.prisma/client';
-import { REPEAT, TrainingPhase } from '.prisma/client';
+import { TrainingPhase } from '.prisma/client';
 import { calculateTotalDrivingTime } from '~/utils/lesson/lesson-utils';
 import { LessonStatus } from '@prisma/client';
-import { findAllBlockedSlots } from '~/models/blocked-slot.server';
 import { prisma } from '../../../prisma/db';
 import { checkOverlap, filterBlockedSlots } from '~/utils/booking/calculate-available-slots.server';
-import findUp from 'find-up';
-import { findUser } from '~/models/user.server';
 import { raise } from '~/utils/general-utils';
 import { errors } from '~/messages/errors';
+import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
 
 export async function checkStudentLimits(studentId: string, date: DateTime) {
     const studentData = await findStudentData(studentId).then(requireResult);
@@ -201,4 +203,59 @@ export async function determineLessonType(studentId: string) {
          */
         return lessonTypes[0]?.lessonTypeId;
     }
+}
+
+type DrivingLessonsWithStudentData = Awaited<ReturnType<typeof findDailyLessons>>;
+
+//Here we can automatically shift conflicts if adding lessons creates an overlap
+export function resolveOverlap(lessons: DrivingLessonsWithStudentData, newLesson: DrivingLesson) {
+    const overlappingLesson = lessons.find((lesson) => {
+        return (
+            lesson.id !== newLesson.id &&
+            checkOverlap(
+                { start: DateTime.fromISO(lesson.start), end: DateTime.fromISO(lesson.end) },
+                {
+                    start: DateTime.fromISO(newLesson.start),
+                    end: DateTime.fromISO(newLesson.end),
+                }
+            )
+        );
+    });
+    if (overlappingLesson) {
+        const updatedLessons: DrivingLessonsWithStudentData = [];
+        const overlappingLessonStart = DateTime.fromISO(overlappingLesson.start);
+        const overlappingLessonEnd = DateTime.fromISO(overlappingLesson.end);
+        const overlappingLessonDuration = overlappingLessonEnd
+            .diff(overlappingLessonStart)
+            .as('minutes');
+        const waitingTime = overlappingLesson.student?.studentData?.waitingTime;
+        const updatedOverlappingLesson = {
+            ...overlappingLesson,
+            start: waitingTime
+                ? getSafeISOStringFromDateTime(
+                      DateTime.fromISO(newLesson.end).plus({ minutes: waitingTime })
+                  )
+                : newLesson.end,
+            end: getSafeISOStringFromDateTime(
+                DateTime.fromISO(newLesson.end).plus({
+                    minutes: overlappingLessonDuration + (waitingTime ? waitingTime : 0),
+                })
+            ),
+        };
+        updatedLessons.push(
+            updatedOverlappingLesson,
+            ...lessons.filter((lesson) => lesson.id !== updatedOverlappingLesson.id)
+        );
+        return resolveOverlap(updatedLessons, updatedOverlappingLesson);
+    }
+    return lessons;
+}
+
+export async function checkForLessonShift(updatedLesson: DrivingLesson) {
+    const lessons = await findDailyLessons(
+        updatedLesson.instructorId,
+        DateTime.fromISO(updatedLesson.start),
+        'CONFIRMED' || 'REQUESTED'
+    );
+    return resolveOverlap(lessons, updatedLesson);
 }

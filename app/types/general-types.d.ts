@@ -12,3 +12,7 @@ export type SchemaValidationErrorActionData<T> = {
 export type ValidationErrors = {
     [p: string]: string[];
 };
+
+export type TypedValidationErrors<T> = {
+    [P in keyof T]?: string[];
+};

@@ -76,7 +76,7 @@ export const DaySelector = ({
                     })}
                 </motion.p>
                 <div className={'w-full flex justify-center gap-3 relative'}>
-                    <DaySelectorButton
+                    <ChevronButton
                         onClick={() => handleSelectDate('subtract')}
                         disabled={selectedDate && selectedDate <= firstAvailableDay}
                         rotate={false}
@@ -100,7 +100,7 @@ export const DaySelector = ({
                             ))}
                         </motion.div>
                     </motion.div>
-                    <DaySelectorButton
+                    <ChevronButton
                         onClick={() => handleSelectDate('add')}
                         disabled={selectedDate && selectedDate >= lastAvailableDay}
                         rotate={true}
@@ -142,7 +142,7 @@ const DaySelectorDay = ({
     );
 };
 
-const DaySelectorButton = ({
+const ChevronButton = ({
     onClick,
     disabled,
     rotate,

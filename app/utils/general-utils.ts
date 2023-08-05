@@ -100,8 +100,9 @@ export function useDoubleCheck() {
 }
 
 export function transformErrors<T>(
-    errors: SchemaValidationErrorActionData<T>['formValidationErrors']
+    errors: SchemaValidationErrorActionData<T>['formValidationErrors'] | undefined
 ) {
+    if (!errors) return undefined;
     const transformedErrors: { [P in keyof T]?: string } = {};
     const keys = Object.keys(errors);
     keys.forEach((key) => {
@@ -113,6 +114,15 @@ export function transformErrors<T>(
 export function getBookingLink() {
     return `/book`;
 }
+
+export function safeParseFloat(value: string | undefined) {
+    try {
+        return value ? parseFloat(value) : undefined;
+    } catch (error) {
+        return undefined;
+    }
+}
+
 export function getGreeting(user: User) {
     const hour = DateTime.now().hour;
     let timeGreeting = 'Morgen';
@@ -129,4 +139,10 @@ export function getGreeting(user: User) {
         timeGreeting = 'Abend';
     }
     return `Guten ${timeGreeting}, ${user.firstName}`;
+}
+export function getRandomCode(length: number) {
+    return Math.floor(
+        Math.pow(10, length - 1) +
+            Math.random() * (Math.pow(10, length) - Math.pow(10, length - 1) - 1)
+    );
 }

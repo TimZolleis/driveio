@@ -1,51 +1,37 @@
 import type { DataFunctionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { zfd } from 'zod-form-data';
-import { z, ZodError } from 'zod';
-import { requireManagementPermissions, requireRole, requireUser } from '~/utils/user/user.server';
+import { z } from 'zod';
+import { requireRole } from '~/utils/user/user.server';
 import { prisma } from '../../prisma/db';
-import { Prisma, ROLE } from '.prisma/client';
+import { ROLE } from '.prisma/client';
 import { errors } from '~/messages/errors';
 import { Modal } from '~/components/ui/Modal';
 import { Card, CardDescription, CardTitle } from '~/components/ui/Card';
-import { GeneralUserDataForm } from '~/components/features/user/GeneralUserDataForm';
 import { useNavigate } from 'react-router';
-import { Form, useActionData, useLoaderData, isRouteErrorResponse } from '@remix-run/react';
+import { Form, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
 import type { ValidationErrorActionData } from '~/types/general-types';
-import { EditLessonForm } from '~/components/features/lesson/EditLessonForm';
-import {
-    getQuery,
-    handleActionError,
-    handleModalIntent,
-    requireParameter,
-} from '~/utils/general-utils';
-import { findLesson } from '~/models/lesson.server';
-import { requireResult } from '~/utils/db/require-result.server';
+import { getQuery, handleActionError, handleModalIntent } from '~/utils/general-utils';
 import { timeFormatSchema } from '~/routes/_app.me.blocked-slots.add';
 import { DateTime } from 'luxon';
 import { getSafeISOStringFromDateTime, setTimeOnDate } from '~/utils/luxon/parse-hour-minute';
-import { findStudent, findStudents, findUser } from '~/models/user.server';
+import { findStudent, findStudents } from '~/models/user.server';
 import { ModalButtons } from '~/components/ui/ModalButtons';
-import { AddLessonForm } from '~/components/features/lesson/AddLessonForm';
+import { AddLessonForm, addLessonSchema } from '~/components/features/lesson/AddLessonForm';
 import { LessonStatus } from '@prisma/client';
-import { Button } from '~/components/ui/Button';
+import { getLessonTypes } from '~/models/lesson-type.server';
+import { determineLessonType } from '~/utils/lesson/booking-utils.server';
+import { useModalFormState } from '~/utils/hooks/form-state';
+import { getToastMessageHeader } from '~/utils/flash/toast.server';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireRole(request, ROLE.INSTRUCTOR);
     const students = await findStudents({ instructorId: user.id });
-    console.log(students);
+    const lessonTypes = await getLessonTypes();
     const time = getQuery(request, 'time');
     const date = getQuery(request, 'date');
-    return json({ students, time, date });
+    return json({ students, time, date, lessonTypes });
 };
-
-const addLessonSchema = zfd.formData({
-    start: zfd.text(timeFormatSchema),
-    duration: zfd.text(),
-    date: zfd.text(),
-    description: zfd.text(z.string().optional()),
-    student: zfd.text(),
-});
 
 export const action = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireRole(request, ROLE.INSTRUCTOR);
@@ -61,6 +47,8 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 
         const start = setTimeOnDate(data.start, DateTime.fromISO(data.date));
         const end = start.plus({ minute: parseInt(data.duration) });
+        const lessonTypeId =
+            data.lessonType === 'auto' ? await determineLessonType(student.id) : data.lessonType;
 
         await prisma.drivingLesson.create({
             data: {
@@ -70,24 +58,26 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
                 userId: student.id,
                 instructorId: user.id,
                 status: LessonStatus.CONFIRMED,
+                lessonTypeId,
+            },
+        });
+        return redirect('/lessons', {
+            headers: {
+                ...(await getToastMessageHeader(request, {
+                    title: 'Fahrstunde hinzugefügt',
+                    description: 'Die Fahrstunde wurde erfolgreich hinzugefügt.',
+                })),
             },
         });
     } catch (error) {
         return handleActionError(error);
     }
-
-    return redirect('/lessons');
 };
 
 const AddLessonPage = () => {
-    const { students, date, time } = useLoaderData<typeof loader>();
-    const navigate = useNavigate();
-    const onClose = () => {
-        navigate('/lessons');
-    };
-
+    const { students, date, time, lessonTypes } = useLoaderData<typeof loader>();
     const actionData = useActionData<ValidationErrorActionData>();
-
+    const formState = useModalFormState();
     return (
         <Modal open={true} onClose={() => console.log('OnClose')}>
             <Card className={'border-none shadow-none p-0'}>
@@ -101,12 +91,18 @@ const AddLessonPage = () => {
                 <div className={'mt-4'}>
                     <Form method={'post'}>
                         <AddLessonForm
+                            lessonTypes={lessonTypes}
                             students={students}
                             time={time || undefined}
                             date={date ? DateTime.fromISO(date) : undefined}
                             errors={actionData?.formValidationErrors}
                         />
-                        <ModalButtons cancelText={'Abbrechen'} confirmationText={'Hinzufügen'} />
+                        <ModalButtons
+                            isCancelling={formState.isCancelling}
+                            isSaving={formState.isSaving}
+                            cancelText={'Abbrechen'}
+                            confirmationText={'Hinzufügen'}
+                        />
                     </Form>
                 </div>
             </Card>

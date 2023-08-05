@@ -34,6 +34,16 @@ export async function sendSaveSuccessMessage(request: Request, type: string, use
     };
 }
 
+export async function getToastMessageHeader(request: Request, { title, description, type }: Toast) {
+    return {
+        'Set-Cookie': await toastMessage(request, {
+            title: title,
+            description: description,
+            type: type,
+        }),
+    };
+}
+
 export async function sendJsonWithSuccessMessage<T extends Object>(
     request: Request,
     { title, description, type }: Toast,

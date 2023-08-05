@@ -12,12 +12,16 @@ import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import type { ValidationErrorActionData } from '~/types/general-types';
 import { EditLessonForm } from '~/components/features/lesson/EditLessonForm';
 import { handleActionError, handleModalIntent, requireParameter } from '~/utils/general-utils';
-import { cancelLesson, findLesson } from '~/models/lesson.server';
+import { cancelLesson, findLesson, shiftLessons } from '~/models/lesson.server';
 import { requireResult } from '~/utils/db/require-result.server';
 import { timeFormatSchema } from '~/routes/_app.me.blocked-slots.add';
 import { DateTime } from 'luxon';
 import { getSafeISOStringFromDateTime, setTimeOnDate } from '~/utils/luxon/parse-hour-minute';
 import { Button } from '~/components/ui/Button';
+import { Drawer } from 'vaul';
+import { useEffect, useState } from 'react';
+import { checkForLessonShift } from '~/utils/lesson/booking-utils.server';
+import { useModalFormState } from '~/utils/hooks/form-state';
 
 export const loader = async ({ request, params }: DataFunctionArgs) => {
     const user = await requireRole(request, ROLE.INSTRUCTOR);
@@ -53,7 +57,7 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
                 const date = DateTime.fromISO(data.date);
                 const start = setTimeOnDate(data.start, date);
                 const end = setTimeOnDate(data.end, date);
-                await prisma.drivingLesson.update({
+                const updatedLesson = await prisma.drivingLesson.update({
                     where: {
                         id: lessonId,
                     },
@@ -63,6 +67,8 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
                         description: data.description,
                     },
                 });
+                const lessonsToShift = await checkForLessonShift(updatedLesson);
+                await shiftLessons(lessonsToShift);
                 break;
             }
         }
@@ -75,15 +81,11 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
 
 const EditLessonPage = () => {
     const { lesson } = useLoaderData<typeof loader>();
-    const navigate = useNavigate();
-    const onClose = () => {
-        navigate('/lessons');
-    };
-
     const actionData = useActionData<ValidationErrorActionData>();
+    const { isSaving, isCancelling } = useModalFormState();
 
     return (
-        <Modal open={true} onClose={() => console.log('OnClose')}>
+        <Modal open={true}>
             <Card className={'border-none shadow-none p-0'}>
                 <div className={'grid gap-2'}>
                     <CardTitle>Fahrstunde bearbeiten</CardTitle>
@@ -100,10 +102,14 @@ const EditLessonPage = () => {
                                 Fahrstunde absagen
                             </Button>
                             <div className={'flex gap-3'}>
-                                <Button name={'intent'} value={'cancel'} variant={'secondary'}>
+                                <Button
+                                    isLoading={isCancelling}
+                                    name={'intent'}
+                                    value={'cancel'}
+                                    variant={'secondary'}>
                                     Abbrechen
                                 </Button>
-                                <Button name={'intent'} value={'save'}>
+                                <Button isLoading={isSaving} name={'intent'} value={'save'}>
                                     Speichern
                                 </Button>
                             </div>
