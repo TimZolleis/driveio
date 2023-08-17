@@ -39,7 +39,7 @@ const InstructorBlockedSlotsPage = () => {
                         Hier können blockierte Zeiten eines Fahrlehrers bearbeitet werden.
                     </p>
                 </div>
-                <Link to={'add'} className={buttonVariants()}>
+                <Link to={'add'} className={cn(buttonVariants(), 'min-w-max')}>
                     Blockierung hinzufügen
                 </Link>
             </div>

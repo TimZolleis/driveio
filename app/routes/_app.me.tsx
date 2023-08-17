@@ -1,15 +1,10 @@
 import type { DataFunctionArgs } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { Outlet, useLoaderData } from '@remix-run/react';
-import { Suspense } from 'react';
-import { Await } from 'react-router';
-import { getFullName } from '~/utils/hooks/user';
-import { Separator } from '~/components/ui/Seperator';
-import { SidebarNav, TopNavigation } from '~/components/features/SideNavigation';
+import { TopNavigation } from '~/components/features/SideNavigation';
 import { requireUser } from '~/utils/user/user.server';
 import type { User } from '.prisma/client';
 import { PageHeader } from '~/components/ui/PageHeader';
-import { UserFormSkeleton } from '~/components/features/user/UserFormSkeleton';
 
 const sidebarNavItems = (user?: User) => [
     {

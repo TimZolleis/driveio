@@ -1,6 +1,19 @@
 import type { ReactNode } from 'react';
 import { Header } from '~/components/features/Header';
-import { Ban, Building2, List, LogOut, Plus, Settings, UserCheck, Users } from 'lucide-react';
+import {
+    Ban,
+    Building2,
+    List,
+    LogOut,
+    Menu,
+    Minimize,
+    Minimize2,
+    Plus,
+    Settings,
+    UserCheck,
+    Users,
+    X,
+} from 'lucide-react';
 import { Separator } from '~/components/ui/Seperator';
 import { useOptionalUser } from '~/utils/hooks/user';
 import type { User } from '.prisma/client';
@@ -76,10 +89,23 @@ export const AppLayout = ({ children, user }: { children: ReactNode; user?: User
 
     return (
         <main className={'font-inter text-base font-normal'}>
+            <div className={'absolute top-5 right-5 z-30'}>
+                {showNavigation ? (
+                    <X
+                        onClick={() => setShowNavigation(!showNavigation)}
+                        className={'w-8 h-8 text-muted-foreground hover:cursor-pointer'}
+                    />
+                ) : (
+                    <Menu
+                        onClick={() => setShowNavigation(!showNavigation)}
+                        className={'w-8 h-8 text-muted-foreground hover:cursor-pointer'}
+                    />
+                )}
+            </div>
             <main className={'flex'}>
                 <div
                     className={cn(
-                        'fixed z-10 flex h-full w-full flex-col bg-slate-100 p-4 transition-all dark:border-stone-700 dark:bg-stone-900 sm:w-60 sm:translate-x-0 font-medium text-sm transform',
+                        'fixed z-20 flex h-full w-full flex-col bg-slate-100 p-4 transition-all dark:border-stone-700 dark:bg-stone-900 sm:w-60 sm:translate-x-0 font-medium text-sm transform',
                         showNavigation ? 'translate-x-0' : '-translate-x-full'
                     )}>
                     <Link to={'/'} className={'font-semibold text-xl pb-2 pl-3'}>
