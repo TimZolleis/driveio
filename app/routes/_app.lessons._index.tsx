@@ -25,6 +25,11 @@ import { motion } from 'framer-motion';
 import { cn } from '~/utils/css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getSafeISOStringFromDateTime } from '~/utils/luxon/parse-hour-minute';
+import {
+    findAllBlockedSlots,
+    findDailyBlockedSlots,
+    findWeeklyBlockedSlots,
+} from '~/models/blocked-slot.server';
 
 export const shouldRevalidate: ShouldRevalidateFunction = ({
     actionResult,
@@ -43,6 +48,7 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
     const currentIntervalStart = session.get('currentIntervalStart')
         ? DateTime.fromISO(session.get('currentIntervalStart') as string)
         : DateTime.now();
+    console.log(session.get('currentIntervalStart'));
     const lessons = await findWeeklyLessons({
         instructorId: user.id,
         start: currentIntervalStart,
@@ -50,10 +56,12 @@ export const loader = async ({ request, params }: DataFunctionArgs) => {
     const overlappingGroups = getOverlappingAppointments(
         lessons.filter((lesson) => lesson.status !== LessonStatus.DECLINED)
     );
+    const blockedSlots = await findWeeklyBlockedSlots(user.id, currentIntervalStart);
+
     const startISO = getSafeISOStringFromDateTime(currentIntervalStart);
     const endISO = getSafeISOStringFromDateTime(currentIntervalStart.plus({ week: 1 }));
 
-    return json({ lessons, overlappingGroups, viewMode, startISO, endISO });
+    return json({ lessons, overlappingGroups, viewMode, startISO, endISO, blockedSlots });
 };
 
 export const action = async ({ request, params }: DataFunctionArgs) => {
@@ -62,13 +70,19 @@ export const action = async ({ request, params }: DataFunctionArgs) => {
     const viewMode = formData.get('viewMode')?.toString();
     const currentIntervalStart = session.get('currentIntervalStart')
         ? DateTime.fromISO(session.get('currentIntervalStart') as string)
-        : DateTime.now();
+        : DateTime.now().startOf('week');
     const changeIntervalIntent = formData.get('changeIntervalIntent')?.toString();
     if (changeIntervalIntent === 'increment') {
-        session.set('currentIntervalStart', currentIntervalStart.plus({ week: 1 }).toISO());
+        session.set(
+            'currentIntervalStart',
+            currentIntervalStart.startOf('week').plus({ week: 1 }).toISO()
+        );
     }
     if (changeIntervalIntent === 'decrement') {
-        session.set('currentIntervalStart', currentIntervalStart.minus({ week: 1 }).toISO());
+        session.set(
+            'currentIntervalStart',
+            currentIntervalStart.startOf('week').minus({ week: 1 }).toISO()
+        );
     }
     session.set('viewMode', viewMode);
     return json(
@@ -112,15 +126,25 @@ function getInterval(startISO: string, viewMode: ViewMode | undefined) {
 }
 
 const LessonOverviewPage = () => {
-    const { lessons, viewMode, startISO } = useLoaderData<typeof loader>();
+    const { lessons, viewMode, startISO, blockedSlots } = useLoaderData<typeof loader>();
     const activeLessons = lessons.filter((lesson) => lesson.status !== LessonStatus.DECLINED);
     const navigate = useNavigate();
-    const appointments = activeLessons.map((lesson) => {
+    const activeLessonAppointments = activeLessons.map((lesson) => {
         return {
             appointmentId: lesson.id,
             start: DateTime.fromISO(lesson.start),
             end: DateTime.fromISO(lesson.end),
             name: `${lesson.student.firstName} ${lesson.student.lastName}`,
+        };
+    });
+
+    const blockedSlotAppointments = blockedSlots.map((slot) => {
+        return {
+            appointmentId: slot.id,
+            start: DateTime.fromISO(slot.startDate),
+            end: DateTime.fromISO(slot.endDate),
+            name: 'Blockierter Zeitraum',
+            variant: 'disabled',
         };
     });
 
@@ -161,7 +185,7 @@ const LessonOverviewPage = () => {
                         startHour={6}
                         endHour={20}
                         interval={interval}
-                        appointments={appointments}
+                        appointments={[...activeLessonAppointments, ...blockedSlotAppointments]}
                         onAppointmentClick={(appointment) =>
                             navigate(`${appointment.appointmentId}/edit`)
                         }>

@@ -29,7 +29,7 @@ export function calculateRows(start: DateTime, end: DateTime) {
 export function isInWeek(interval: Interval, start: DateTime, end: DateTime, repeat?: REPEAT) {
     const startEndInterval = Interval.fromDateTimes(start, end);
     if (!repeat) {
-        interval.overlaps(startEndInterval);
+        return interval.overlaps(startEndInterval);
     }
     if (repeat === 'YEARLY') {
         return interval.start?.month === start.month;

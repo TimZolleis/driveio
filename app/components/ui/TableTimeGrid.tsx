@@ -289,7 +289,7 @@ const TimeGridTableAppointment = React.forwardRef<
             return calculateMinuteHeight() * duration;
         };
         const calculateAppointmentOffset = () => {
-            const startOfGrid = hourRange[0].set({ day: start.day });
+            const startOfGrid = hourRange[0].set({ day: start.day, month: start.month });
             const diffFromStartOfGrid = start.diff(startOfGrid).as('minute');
             return calculateMinuteHeight() * diffFromStartOfGrid;
         };
