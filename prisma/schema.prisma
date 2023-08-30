@@ -71,29 +71,31 @@ model Image {
 }
 
 model User {
-  id                 String          @id @default(uuid())
-  firstName          String
-  lastName           String
-  password           String?
-  email              String          @unique
-  phone              String?
-  role               ROLE
-  admin              Boolean         @default(false)
-  setupComplete      Boolean         @default(false)
-  enabled            Boolean         @default(true)
-  registration       Registration?
-  profileImage       Image?
-  drivingSchool      DrivingSchool   @relation(fields: [drivingSchoolId], references: [id])
-  drivingSchoolId    String
-  studentData        StudentData?
-  instructorData     InstructorData?
-  managementData     ManagementData?
-  blockedSlots       BlockedSlot[]
-  lessons            DrivingLesson[] @relation("studentDrivingLessons")
-  instructingLessons DrivingLesson[] @relation("instructorDrivingLessons")
-  permissions        Permission[]
-  deleted            Boolean         @default(false)
-  lessonActions      LessonAction[]
+  id                       String                    @id @default(uuid())
+  firstName                String
+  lastName                 String
+  password                 String?
+  email                    String                    @unique
+  phone                    String?
+  role                     ROLE
+  admin                    Boolean                   @default(false)
+  setupComplete            Boolean                   @default(false)
+  enabled                  Boolean                   @default(true)
+  registration             Registration?
+  profileImage             Image?
+  drivingSchool            DrivingSchool             @relation(fields: [drivingSchoolId], references: [id])
+  drivingSchoolId          String
+  studentData              StudentData?
+  instructorData           InstructorData?
+  managementData           ManagementData?
+  blockedSlots             BlockedSlot[]
+  lessons                  DrivingLesson[]           @relation("studentDrivingLessons")
+  instructingLessons       DrivingLesson[]           @relation("instructorDrivingLessons")
+  permissions              Permission[]
+  deleted                  Boolean                   @default(false)
+  lessonActions            LessonAction[]
+  theoreticalLessons       TheoreticalLesson[]
+  theoreticalLessonActions TheoreticalLessonAction[]
 }
 
 model Permission {
@@ -200,6 +202,27 @@ model LessonAction {
   createdAt DateTime      @default(now())
 
   @@id([lessonId, createdAt])
+}
+
+model TheoreticalLesson {
+  id             String                    @id @default(uuid())
+  name           String
+  location       String
+  start          String
+  end            String
+  repeatInterval Int
+  students       User[]
+  actions        TheoreticalLessonAction[]
+}
+
+model TheoreticalLessonAction {
+  id         String            @id @default(uuid())
+  lessonId   String
+  lesson     TheoreticalLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action     String
+  actionDate String
 }
 
 enum LessonStatus {
